@@ -1,20 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { catalogResponseSchema, routeErrorSchema } from "@/lib/schemas";
+import { fetchJson } from "@/features/shared/fetch-json";
+import { catalogResponseSchema } from "@/lib/schemas/content";
 
 // The catalog changes rarely, so one load per hour is plenty.
 const CATALOG_STALE_TIME = 60 * 60 * 1000;
+const CATALOG_TIMEOUT_MS = 20_000;
 
-async function fetchCatalog() {
-  const response = await fetch("/api/content");
-  const body: unknown = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const parsed = routeErrorSchema.safeParse(body);
-    throw new Error(parsed.success ? parsed.data.error : "Could not load the catalog.");
-  }
-  return catalogResponseSchema.parse(body).items;
+async function fetchCatalog({ signal }: { signal: AbortSignal }) {
+  const body = await fetchJson("/api/content", catalogResponseSchema, {
+    signal,
+    timeoutMs: CATALOG_TIMEOUT_MS,
+    fallbackMessage: "Could not load the catalog.",
+  });
+  return body.items;
 }
 
 export function useCatalog() {
@@ -22,5 +22,7 @@ export function useCatalog() {
     queryKey: ["catalog"],
     queryFn: fetchCatalog,
     staleTime: CATALOG_STALE_TIME,
+    // One quick retry covers a blip; a setup problem should show without a long wait.
+    retry: 1,
   });
 }

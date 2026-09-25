@@ -32,7 +32,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const [catalog, companyId] = await Promise.all([getCatalog(), resolveCompanyId()]);
+    const companyId = await resolveCompanyId();
+    const catalog = await getCatalog(companyId);
     const lines = assemblePackage(template, basics, catalog, choices);
     const summary = summarize(lines, basics);
     if (!lines.some((line) => line.quantity > 0)) {

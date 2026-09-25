@@ -38,6 +38,12 @@ export function Wizard() {
   // Set before the first render after a click, so a fast second click or the
   // toast's retry cannot send the same draft twice.
   const creatingRef = useRef(false);
+  // The toast outlives this render, so its retry calls the latest createDraft
+  // and sends what the salesperson has entered since the failure.
+  const latestCreateDraft = useRef<() => void>(() => {});
+  useEffect(() => {
+    latestCreateDraft.current = createDraft;
+  });
 
   // Repeat clicks while a request is on its way are ignored. On failure every
   // entered value stays, and the toast offers to try again.
@@ -59,7 +65,7 @@ export function Wizard() {
       onError: (error) =>
         toast.error("Could not create the draft proposal", {
           description: error.message,
-          action: { label: "Try again", onClick: createDraft },
+          action: { label: "Try again", onClick: () => latestCreateDraft.current() },
         }),
     });
   }

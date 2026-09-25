@@ -125,8 +125,20 @@ export async function searchProposals(options: {
 
 const companyIdSchema = z.coerce.number().int().positive();
 
+// The company never changes while the server runs, so it is looked up once.
+// A failed lookup is not kept, so the next request tries again.
+let companyIdLookup: Promise<number> | null = null;
+
+export function resolveCompanyId(): Promise<number> {
+  companyIdLookup ??= lookUpCompanyId().catch((error: unknown) => {
+    companyIdLookup = null;
+    throw error;
+  });
+  return companyIdLookup;
+}
+
 // Uses PROPOSALES_COMPANY_ID when set, otherwise the only company the token can see.
-export async function resolveCompanyId(): Promise<number> {
+async function lookUpCompanyId(): Promise<number> {
   const configured = process.env.PROPOSALES_COMPANY_ID;
   if (configured) {
     const parsed = companyIdSchema.safeParse(configured);

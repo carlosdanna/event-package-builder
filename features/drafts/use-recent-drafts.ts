@@ -1,21 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { recentProposalsResponseSchema, routeErrorSchema } from "@/lib/schemas";
+import { fetchJson } from "@/features/shared/fetch-json";
+import { recentProposalsResponseSchema } from "@/lib/schemas/proposal";
 
-export const RECENT_DRAFTS_KEY = ["proposals"];
+export const RECENT_DRAFTS_KEY = ["drafts"];
+const RECENT_DRAFTS_TIMEOUT_MS = 20_000;
 
-async function fetchRecentDrafts() {
-  const response = await fetch("/api/proposals");
-  const body: unknown = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const parsed = routeErrorSchema.safeParse(body);
-    throw new Error(parsed.success ? parsed.data.error : "Could not load recent drafts.");
-  }
-  return recentProposalsResponseSchema.parse(body).items;
+async function fetchRecentDrafts({ signal }: { signal: AbortSignal }) {
+  const body = await fetchJson("/api/proposals", recentProposalsResponseSchema, {
+    signal,
+    timeoutMs: RECENT_DRAFTS_TIMEOUT_MS,
+    fallbackMessage: "Could not load recent drafts.",
+  });
+  return body.items;
 }
 
 export function useRecentDrafts() {
-  return useQuery({ queryKey: RECENT_DRAFTS_KEY, queryFn: fetchRecentDrafts });
+  return useQuery({ queryKey: RECENT_DRAFTS_KEY, queryFn: fetchRecentDrafts, retry: 1 });
 }
