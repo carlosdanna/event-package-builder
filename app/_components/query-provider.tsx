@@ -11,7 +11,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
+      {process.env.NODE_ENV === "development" && (
+        // Top left, so it does not cover the summary bar on phones.
+        <ReactQueryDevtools buttonPosition="top-left" />
+      )}
     </QueryClientProvider>
   );
 }
