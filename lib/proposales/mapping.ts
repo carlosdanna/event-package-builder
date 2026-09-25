@@ -4,7 +4,7 @@ import "server-only";
 import { CATALOG_LANGUAGE } from "@/lib/catalog/merge";
 import { formatDateRange, plural } from "@/lib/format";
 import type { Currency } from "@/lib/money";
-import { eventLength, type LineItem, type PackageSummary } from "@/lib/package";
+import { eventLength, withTax, type LineItem, type PackageSummary } from "@/lib/package";
 import type { CustomerDetails } from "@/lib/schemas/customer";
 import type { EventBasics } from "@/lib/schemas/event-basics";
 import type { Template } from "@/lib/templates/schema";
@@ -67,6 +67,7 @@ function proposalDescription(basics: EventBasics) {
 }
 
 function productBlock(line: LineItem, currency: Currency) {
+  const unitWithTax = withTax(line.unitPrice, line.vatPercent);
   return {
     type: "product-block" as const,
     content_id: line.contentId,
@@ -74,7 +75,12 @@ function productBlock(line: LineItem, currency: Currency) {
     currency,
     quantity: line.quantity,
     // Proposales takes amounts in the smallest currency unit, as they are stored here.
+    // It does not work out the other unit values, and its totals use the ones
+    // after discount, so all four are sent. This app gives no discounts.
     unit_value_without_discount_without_tax: line.unitPrice,
+    unit_value_with_discount_without_tax: line.unitPrice,
+    unit_value_without_discount_with_tax: unitWithTax,
+    unit_value_with_discount_with_tax: unitWithTax,
   };
 }
 

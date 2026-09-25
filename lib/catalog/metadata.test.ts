@@ -38,6 +38,13 @@ describe("catalogMetadata", () => {
     expect(catalogMetadata["Coffee break"].prices.EUR).toBe(850);
   });
 
+  it("charges Swedish VAT: 12% on rooms and food, 25% on spaces and equipment", () => {
+    const expected = { rooms: 12, catering: 12, meeting_space: 25, equipment: 25 };
+    for (const entry of Object.values(catalogMetadata)) {
+      expect(entry.vatPercent).toBe(expected[entry.category as keyof typeof expected]);
+    }
+  });
+
   it("gives a capacity to every meeting space and to nothing else", () => {
     for (const entry of Object.values(catalogMetadata)) {
       expect(entry.capacity !== undefined).toBe(entry.category === "meeting_space");

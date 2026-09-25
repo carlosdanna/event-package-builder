@@ -54,6 +54,17 @@ describe("POST /api/proposals", () => {
     expect(createProposalMock.mock.calls[0][0].data?.subtotal).toBe(6_900_000);
   });
 
+  it("sends block prices after discount, so Proposales can total the draft", async () => {
+    await post(request);
+
+    const blocks = createProposalMock.mock.calls[0][0].blocks ?? [];
+    const total = blocks.reduce(
+      (sum, block) => sum + block.quantity * (block.unit_value_with_discount_without_tax ?? 0),
+      0,
+    );
+    expect(total).toBe(6_900_000);
+  });
+
   it("prices the draft from the price list of the chosen currency", async () => {
     const response = await post({ ...request, currency: "EUR" });
 
