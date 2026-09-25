@@ -48,7 +48,10 @@ export function MobileSummaryBar(props: SummaryProps) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-xs text-muted-foreground">Total excluding tax</span>
-            <span className="font-semibold tabular-nums">{total}</span>
+            {/* The desktop summary is hidden on phones, so the total is announced here. */}
+            <span className="font-semibold tabular-nums" aria-live="polite" aria-atomic="true">
+              {total}
+            </span>
           </div>
           <SheetTrigger asChild>
             <Button variant="outline">

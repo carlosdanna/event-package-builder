@@ -2,13 +2,12 @@
 
 import { ExternalLinkIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecentProposals } from "./use-recent-proposals";
-
-const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
+import { formatDateTime } from "@/lib/format";
+import { useRecentDrafts } from "./use-recent-drafts";
 
 // Drafts this app created, newest first. Never blocks the wizard.
 export function RecentDrafts() {
-  const query = useRecentProposals();
+  const query = useRecentDrafts();
 
   return (
     <section aria-labelledby="recent-drafts-heading" className="flex flex-col gap-3">
@@ -36,7 +35,7 @@ export function RecentDrafts() {
               >
                 <span className="min-w-0 truncate">{proposal.title || "Untitled proposal"}</span>
                 <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
-                  {dateFormat.format(new Date(proposal.updatedAt))}
+                  {formatDateTime(proposal.updatedAt)}
                   <ExternalLinkIcon aria-hidden className="size-3.5" />
                   <span className="sr-only">(opens in a new tab)</span>
                 </span>

@@ -28,7 +28,8 @@ export function ProgressSteps({ current, isReachable, onSelect }: ProgressStepsP
                   (isDone || isCurrent) && "bg-primary",
                 )}
               />
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm">
+              {/* Five labels do not fit a phone, so there they are for screen readers only. */}
+              <span className="flex items-center gap-1.5 text-sm max-sm:sr-only">
                 <span
                   aria-hidden
                   className={cn(
@@ -57,13 +58,13 @@ export function ProgressSteps({ current, isReachable, onSelect }: ProgressStepsP
                 <button
                   type="button"
                   onClick={() => onSelect(index)}
-                  className="flex w-full flex-col gap-2 rounded-md text-left outline-none hover:[&>span:last-child>span:last-child]:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex w-full flex-col gap-2 rounded-md text-left outline-none max-sm:min-h-11 max-sm:justify-center hover:[&>span:last-child>span:last-child]:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   {content}
                   <span className="sr-only">, go to step {index + 1}</span>
                 </button>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-sm:min-h-11 max-sm:justify-center">
                   {content}
                   <span className="sr-only">
                     {isCurrent ? ", current step" : isDone ? "" : ", not reached yet"}
@@ -74,6 +75,10 @@ export function ProgressSteps({ current, isReachable, onSelect }: ProgressStepsP
           );
         })}
       </ol>
+      <p aria-hidden className="mt-3 text-sm text-muted-foreground sm:hidden">
+        Step {current + 1} of {STEPS.length}:{" "}
+        <span className="font-medium text-foreground">{STEPS[current].label}</span>
+      </p>
     </nav>
   );
 }

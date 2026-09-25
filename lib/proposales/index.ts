@@ -5,7 +5,6 @@ import { proposalesFetch } from "./client";
 import { ProposalesError } from "./errors";
 import {
   companySchema,
-  companyTemplateSchema,
   contentArchivedSchema,
   contentCreatedSchema,
   contentItemSchema,
@@ -28,14 +27,6 @@ export async function listCompanies() {
   const response = await proposalesFetch("/v3/companies", {
     schema: listOf(companySchema),
   });
-  return response.data;
-}
-
-export async function listCompanyTemplates(companyId: number) {
-  const response = await proposalesFetch(
-    `/v3/companies/${companyId}/templates`,
-    { schema: listOf(companyTemplateSchema) },
-  );
   return response.data;
 }
 
@@ -125,8 +116,20 @@ export async function searchProposals(options: {
 
 const companyIdSchema = z.coerce.number().int().positive();
 
+// The company never changes while the server runs, so it is looked up once.
+// A failed lookup is not kept, so the next request tries again.
+let companyIdLookup: Promise<number> | null = null;
+
+export function resolveCompanyId(): Promise<number> {
+  companyIdLookup ??= lookUpCompanyId().catch((error: unknown) => {
+    companyIdLookup = null;
+    throw error;
+  });
+  return companyIdLookup;
+}
+
 // Uses PROPOSALES_COMPANY_ID when set, otherwise the only company the token can see.
-export async function resolveCompanyId(): Promise<number> {
+async function lookUpCompanyId(): Promise<number> {
   const configured = process.env.PROPOSALES_COMPANY_ID;
   if (configured) {
     const parsed = companyIdSchema.safeParse(configured);

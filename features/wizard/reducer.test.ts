@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   canReach,
   initialWizardState,
@@ -6,6 +6,15 @@ import {
   type WizardAction,
   type WizardState,
 } from "./reducer";
+
+// The wizard refuses past start dates, so the tests run on a fixed day.
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 1, 12));
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 function run(...actions: WizardAction[]) {
   return actions.reduce(wizardReducer, initialWizardState);
@@ -77,10 +86,12 @@ describe("wizardReducer package choices", () => {
     expect(back.overrides).toEqual({});
   });
 
-  it("ignores quantities that are not whole numbers of zero or more", () => {
+  it("ignores quantities that are not whole numbers from zero to 10,000", () => {
     expect(run({ type: "setQuantity", contentId: 4, quantity: -1, derivedQuantity: 8 }).overrides)
       .toEqual({});
     expect(run({ type: "setQuantity", contentId: 4, quantity: 1.5, derivedQuantity: 8 }).overrides)
+      .toEqual({});
+    expect(run({ type: "setQuantity", contentId: 4, quantity: 10_001, derivedQuantity: 8 }).overrides)
       .toEqual({});
   });
 

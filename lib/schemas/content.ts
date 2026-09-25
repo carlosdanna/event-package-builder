@@ -6,6 +6,3 @@ export const catalogResponseSchema = z.object({
   items: z.array(catalogItemSchema),
 });
 export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
-
-// Error body returned by this app's route handlers.
-export const routeErrorSchema = z.object({ error: z.string() });

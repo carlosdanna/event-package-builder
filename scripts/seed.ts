@@ -19,9 +19,10 @@ import {
   catalogMetadata,
   CATALOG_LANGUAGE,
   contentTitle,
+  unitLabel,
   type CatalogMetadata,
-  type PricingUnit,
 } from "@/lib/catalog";
+import { formatKronor } from "@/lib/format";
 
 type Outcome = "created" | "restored" | "updated" | "skipped" | "archived" | "failed";
 type Row = { title: string; outcome: Outcome; note?: string };
@@ -33,24 +34,8 @@ const retiredTitles = [
   "Offsite day package",
 ];
 
-const unitLabels: Record<PricingUnit, string> = {
-  per_person: "per person",
-  per_person_per_day: "per person per day",
-  per_room_per_night: "per room per night",
-  per_day: "per day",
-  flat: "fixed price",
-};
-
-function formatKronor(ore: number) {
-  return new Intl.NumberFormat("sv-SE", {
-    style: "currency",
-    currency: "SEK",
-    maximumFractionDigits: 0,
-  }).format(ore / 100);
-}
-
 function describe(entry: CatalogMetadata) {
-  const price = `${formatKronor(entry.priceOre)} ${unitLabels[entry.unit]}, excluding tax.`;
+  const price = `${formatKronor(entry.priceOre)} ${unitLabel(entry.unit)}, excluding tax.`;
   return `${entry.description}\n\nPrice: ${price}`;
 }
 

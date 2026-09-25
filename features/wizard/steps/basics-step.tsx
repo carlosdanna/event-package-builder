@@ -1,21 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { format, max, startOfToday } from "date-fns";
+import { addDays, format, max, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { plural } from "@/lib/format";
 import { eventLength } from "@/lib/package";
 import {
+  MAX_EVENT_DAYS,
   MAX_GUESTS,
   eventBasicsDraftSchema,
   type EventBasicsDraft,
 } from "@/lib/schemas/event-basics";
 import { Field } from "./field";
+import { fieldErrors } from "./field-errors";
 
 type FieldName = keyof EventBasicsDraft;
+
+// Element ids in form order, so the wizard can focus the first invalid field.
+export const basicsFieldIds: Record<FieldName, string> = {
+  guests: "guests",
+  startDate: "start-date",
+  endDate: "end-date",
+  budgetKronor: "budget",
+};
 
 type BasicsStepProps = {
   draft: EventBasicsDraft;
@@ -25,16 +36,16 @@ type BasicsStepProps = {
 
 export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
-  const errors = fieldErrors(draft);
+  const errors = fieldErrors<FieldName>(eventBasicsDraftSchema, draft);
   const errorFor = (field: FieldName) => (showAllErrors || touched[field] ? errors[field] : undefined);
   const touch = (field: FieldName) => setTouched((current) => ({ ...current, [field]: true }));
 
   return (
     <div className="flex flex-col gap-6">
-      <Field id="guests" label="Number of guests" error={errorFor("guests")}>
+      <Field id={basicsFieldIds.guests} label="Number of guests" error={errorFor("guests")}>
         {(describedBy) => (
           <Input
-            id="guests"
+            id={basicsFieldIds.guests}
             type="number"
             inputMode="numeric"
             min={1}
@@ -52,11 +63,11 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
       </Field>
 
       <div className="flex flex-col gap-2">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="start-date" label="Start date" error={errorFor("startDate")}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field id={basicsFieldIds.startDate} label="Start date" error={errorFor("startDate")}>
             {(describedBy) => (
               <DatePicker
-                id="start-date"
+                id={basicsFieldIds.startDate}
                 value={draft.startDate}
                 describedBy={describedBy}
                 invalid={Boolean(errorFor("startDate"))}
@@ -64,17 +75,20 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
                   onChange("startDate", value);
                   touch("startDate");
                   // Keep the range valid: a single-day event is the natural default.
-                  if (!draft.endDate || draft.endDate < value) onChange("endDate", value);
+                  if (!draft.endDate || draft.endDate < value || draft.endDate > lastEndDate(value)) {
+                    onChange("endDate", value);
+                  }
                 }}
               />
             )}
           </Field>
-          <Field id="end-date" label="End date" error={errorFor("endDate")}>
+          <Field id={basicsFieldIds.endDate} label="End date" error={errorFor("endDate")}>
             {(describedBy) => (
               <DatePicker
-                id="end-date"
+                id={basicsFieldIds.endDate}
                 value={draft.endDate}
                 earliest={draft.startDate}
+                latest={draft.startDate ? lastEndDate(draft.startDate) : undefined}
                 describedBy={describedBy}
                 invalid={Boolean(errorFor("endDate"))}
                 onChange={(value) => {
@@ -89,14 +103,14 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
       </div>
 
       <Field
-        id="budget"
+        id={basicsFieldIds.budgetKronor}
         label="Budget in kronor (optional)"
         hint="Excluding tax. The summary shows how much of it the package uses."
         error={errorFor("budgetKronor")}
       >
         {(describedBy) => (
           <Input
-            id="budget"
+            id={basicsFieldIds.budgetKronor}
             inputMode="numeric"
             placeholder="For example 120,000"
             className="max-w-56"
@@ -116,12 +130,13 @@ type DatePickerProps = {
   id: string;
   value: string;
   earliest?: string;
+  latest?: string;
   describedBy?: string;
   invalid: boolean;
   onChange: (value: string) => void;
 };
 
-function DatePicker({ id, value, earliest, describedBy, invalid, onChange }: DatePickerProps) {
+function DatePicker({ id, value, earliest, latest, describedBy, invalid, onChange }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = value ? fromIsoDate(value) : undefined;
   // Events cannot start in the past; the end date cannot be before the start.
@@ -135,6 +150,8 @@ function DatePicker({ id, value, earliest, describedBy, invalid, onChange }: Dat
           id={id}
           variant="outline"
           className="w-full justify-start font-normal sm:max-w-64"
+          // The label alone would hide the chosen date from screen readers.
+          aria-labelledby={`${id}-label ${id}`}
           aria-invalid={invalid}
           aria-describedby={describedBy}
         >
@@ -151,7 +168,9 @@ function DatePicker({ id, value, earliest, describedBy, invalid, onChange }: Dat
           mode="single"
           selected={selected}
           defaultMonth={selected ?? earliestDate}
-          disabled={{ before: earliestDate }}
+          disabled={
+            latest ? [{ before: earliestDate }, { after: fromIsoDate(latest) }] : { before: earliestDate }
+          }
           onSelect={(date) => {
             if (!date) return;
             onChange(toIsoDate(date));
@@ -174,14 +193,9 @@ function EventLengthNote({ startDate, endDate }: { startDate: string; endDate: s
   );
 }
 
-function fieldErrors(draft: EventBasicsDraft) {
-  const result = eventBasicsDraftSchema.safeParse(draft);
-  const errors: Partial<Record<FieldName, string>> = {};
-  for (const issue of result.error?.issues ?? []) {
-    const field = issue.path[0] as FieldName;
-    errors[field] ??= issue.message;
-  }
-  return errors;
+// The last end date that keeps the event within MAX_EVENT_DAYS.
+function lastEndDate(startDate: string) {
+  return toIsoDate(addDays(fromIsoDate(startDate), MAX_EVENT_DAYS - 1));
 }
 
 // Calendar dates are local days, so they are read and written without time zones.
@@ -192,8 +206,4 @@ function fromIsoDate(value: string) {
 
 function toIsoDate(date: Date) {
   return format(date, "yyyy-MM-dd");
-}
-
-function plural(count: number, word: string) {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
 }

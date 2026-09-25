@@ -20,3 +20,16 @@ export function formatDateRange(startDate: string, endDate: string) {
   if (startYear === endYear) return `${startDay} ${MONTHS[startMonth - 1]} – ${end}`;
   return `${startDay} ${MONTHS[startMonth - 1]} ${startYear} – ${end}`;
 }
+
+// A moment as local date and time: "14 Oct 2026, 09:05".
+export function formatDateTime(milliseconds: number) {
+  const date = new Date(milliseconds);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}, ${hours}:${minutes}`;
+}
+
+// "1 day", "2 days".
+export function plural(count: number, word: string) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}

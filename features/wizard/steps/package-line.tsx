@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
 import type { LineItem } from "@/lib/package";
+import { MAX_QUANTITY } from "@/lib/schemas/package-selection";
+import { isAllowedQuantity } from "../reducer";
 
 type PackageLineProps = {
   line: LineItem;
@@ -29,7 +31,8 @@ export function PackageLine({
 
   return (
     <li className="flex flex-col gap-2 py-3">
-      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[1fr_auto_7rem_auto]">
+      {/* A fixed actions column, wide enough for reset and remove, keeps every row aligned. */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_7rem_4.25rem]">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{line.title}</span>
@@ -56,6 +59,7 @@ export function PackageLine({
             <Button
               variant="ghost"
               size="icon-sm"
+              className="max-sm:size-11"
               onClick={onReset}
               aria-label={`Reset ${line.title} to the suggested ${line.derivedQuantity}`}
               title={`Reset to ${line.derivedQuantity}`}
@@ -66,6 +70,7 @@ export function PackageLine({
           <Button
             variant="ghost"
             size="icon-sm"
+            className="max-sm:size-11"
             onClick={onRemove}
             aria-label={`Remove ${line.title}`}
             title="Remove"
@@ -111,13 +116,14 @@ function QuantityInput({ id, label, quantity, onChange }: QuantityInputProps) {
       type="number"
       inputMode="numeric"
       min={0}
+      max={MAX_QUANTITY}
       step={1}
-      className="w-20 text-right tabular-nums"
+      className="w-20 text-right tabular-nums max-sm:h-11"
       value={text}
       onChange={(event) => {
         setText(event.target.value);
         const next = Number(event.target.value);
-        if (event.target.value !== "" && Number.isInteger(next) && next >= 0) {
+        if (event.target.value !== "" && isAllowedQuantity(next)) {
           setShownQuantity(next);
           onChange(next);
         }

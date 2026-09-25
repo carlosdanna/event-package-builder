@@ -80,14 +80,14 @@ describe("POST /api/proposals", () => {
     expect(createProposalMock).not.toHaveBeenCalled();
   });
 
-  it("passes on the Proposales message when creating fails", async () => {
+  it("shows a fixed message instead of the Proposales text when creating fails", async () => {
     createProposalMock.mockRejectedValueOnce(
-      new ProposalesError("http", "Invalid request", { status: 400 }),
+      new ProposalesError("http", "Invalid request for company 7", { status: 400 }),
     );
 
     const response = await post(request);
 
     expect(response.status).toBe(502);
-    expect(await response.json()).toEqual({ error: "Invalid request" });
+    expect(await response.json()).toEqual({ error: "Proposales refused the request." });
   });
 });

@@ -9,8 +9,17 @@ import {
   type CustomerDetailsDraft,
 } from "@/lib/schemas/customer";
 import { Field } from "./field";
+import { fieldErrors } from "./field-errors";
 
 type FieldName = keyof CustomerDetailsDraft;
+
+// Element ids in form order, so the wizard can focus the first invalid field.
+export const customerFieldIds: Record<FieldName, string> = {
+  company: "company",
+  contactName: "contact-name",
+  contactEmail: "contact-email",
+  notes: "notes",
+};
 
 type CustomerStepProps = {
   draft: CustomerDetailsDraft;
@@ -20,16 +29,16 @@ type CustomerStepProps = {
 
 export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepProps) {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
-  const errors = fieldErrors(draft);
+  const errors = fieldErrors<FieldName>(customerDetailsDraftSchema, draft);
   const errorFor = (field: FieldName) => (showAllErrors || touched[field] ? errors[field] : undefined);
   const touch = (field: FieldName) => setTouched((current) => ({ ...current, [field]: true }));
 
   return (
     <div className="flex flex-col gap-6">
-      <Field id="company" label="Company" error={errorFor("company")}>
+      <Field id={customerFieldIds.company} label="Company" error={errorFor("company")}>
         {(describedBy) => (
           <Input
-            id="company"
+            id={customerFieldIds.company}
             autoComplete="organization"
             placeholder="For example Acme AB"
             className="sm:max-w-md"
@@ -42,11 +51,11 @@ export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepPro
         )}
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="contact-name" label="Contact name" error={errorFor("contactName")}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field id={customerFieldIds.contactName} label="Contact name" error={errorFor("contactName")}>
           {(describedBy) => (
             <Input
-              id="contact-name"
+              id={customerFieldIds.contactName}
               autoComplete="name"
               value={draft.contactName}
               onChange={(event) => onChange("contactName", event.target.value)}
@@ -56,10 +65,10 @@ export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepPro
             />
           )}
         </Field>
-        <Field id="contact-email" label="Contact email" error={errorFor("contactEmail")}>
+        <Field id={customerFieldIds.contactEmail} label="Contact email" error={errorFor("contactEmail")}>
           {(describedBy) => (
             <Input
-              id="contact-email"
+              id={customerFieldIds.contactEmail}
               type="email"
               autoComplete="email"
               value={draft.contactEmail}
@@ -73,14 +82,14 @@ export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepPro
       </div>
 
       <Field
-        id="notes"
+        id={customerFieldIds.notes}
         label="Notes (optional)"
         hint="Internal, not shown to the customer."
         error={errorFor("notes")}
       >
         {(describedBy) => (
           <Textarea
-            id="notes"
+            id={customerFieldIds.notes}
             rows={4}
             maxLength={MAX_NOTES_LENGTH}
             placeholder="For example dietary needs or arrival times"
@@ -94,14 +103,4 @@ export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepPro
       </Field>
     </div>
   );
-}
-
-function fieldErrors(draft: CustomerDetailsDraft) {
-  const result = customerDetailsDraftSchema.safeParse(draft);
-  const errors: Partial<Record<FieldName, string>> = {};
-  for (const issue of result.error?.issues ?? []) {
-    const field = issue.path[0] as FieldName;
-    errors[field] ??= issue.message;
-  }
-  return errors;
 }

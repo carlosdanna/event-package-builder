@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { QueryProvider } from "./_components/query-provider";
-import { ThemeProvider } from "./_components/theme-provider";
+import { QueryProvider } from "@/components/query-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,7 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <QueryProvider>{children}</QueryProvider>
-          <Toaster />
+          {/* At the top, so toasts never cover the summary bar on phones. */}
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

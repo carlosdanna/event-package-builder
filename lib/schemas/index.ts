@@ -4,3 +4,4 @@ export * from "./event-basics";
 export * from "./package-selection";
 export * from "./customer";
 export * from "./proposal";
+export * from "./route-error";

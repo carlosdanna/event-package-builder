@@ -42,8 +42,11 @@ Full-day conference, wedding, team offsite, private dinner, product launch.
 Each defines event type, default items by content title, and a rooms rule.
 
 ## Folder layout
-- app/ wizard page, app/_components/steps, app/_components/summary.tsx
+- app/ page, layout and error screen only
 - app/api/content, app/api/proposals route handlers
+- features/wizard (wizard, reducer, steps/, summary.tsx, done screen),
+  features/drafts (create and list drafts), features/catalog, features/shared
+- components/ui shadcn components, components/ app-wide providers and theme toggle
 - lib/proposales, lib/package, lib/templates, lib/catalog, lib/schemas
 - scripts/seed.ts
 

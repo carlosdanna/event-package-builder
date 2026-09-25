@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateRange, formatKronor } from "./format";
+import { formatDateRange, formatDateTime, formatKronor, plural } from "./format";
 
 describe("formatKronor", () => {
   it("formats öre as whole kronor with grouping", () => {
@@ -24,5 +24,19 @@ describe("formatDateRange", () => {
 
   it("shows both years across new year", () => {
     expect(formatDateRange("2026-12-31", "2027-01-01")).toBe("31 Dec 2026 – 1 Jan 2027");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("shows the local date and a 24-hour time", () => {
+    expect(formatDateTime(new Date(2026, 9, 14, 9, 5).getTime())).toBe("14 Oct 2026, 09:05");
+  });
+});
+
+describe("plural", () => {
+  it("adds an s for any count but one", () => {
+    expect(plural(1, "day")).toBe("1 day");
+    expect(plural(0, "night")).toBe("0 nights");
+    expect(plural(2, "day")).toBe("2 days");
   });
 });

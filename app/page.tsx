@@ -1,5 +1,5 @@
-import { ThemeToggle } from "./_components/theme-toggle";
-import { Wizard } from "./_components/wizard/wizard";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Wizard } from "@/features/wizard/wizard";
 
 export default function Home() {
   return (

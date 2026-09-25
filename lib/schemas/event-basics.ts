@@ -1,9 +1,40 @@
 // The guests and dates step, shared by the wizard and the proposal route.
 import { z } from "zod";
+import { eventLength } from "@/lib/package/event-length";
 
 export const MAX_GUESTS = 500;
+export const MAX_EVENT_DAYS = 30;
 
 const isoDate = z.iso.date({ message: "Enter a date as YYYY-MM-DD." });
+
+type DateRange = { startDate: string; endDate: string };
+
+// Zod runs these checks even when a date field failed, so a missing or
+// malformed date is left to that field's own message.
+function hasValidDates(range: DateRange) {
+  return isoDate.safeParse(range.startDate).success && isoDate.safeParse(range.endDate).success;
+}
+
+// ISO dates compare correctly as strings.
+function endsOnOrAfterStart(range: DateRange) {
+  return !hasValidDates(range) || range.endDate >= range.startDate;
+}
+
+// A range that ends before it starts is reported by endsOnOrAfterStart instead.
+function lastsAtMostMaxDays(range: DateRange) {
+  if (!hasValidDates(range) || range.endDate < range.startDate) return true;
+  return eventLength(range.startDate, range.endDate).days <= MAX_EVENT_DAYS;
+}
+
+const endBeforeStartError = {
+  message: "The end date cannot be before the start date.",
+  path: ["endDate"],
+};
+
+const tooLongError = {
+  message: `An event can last at most ${MAX_EVENT_DAYS} days.`,
+  path: ["endDate"],
+};
 
 export const eventBasicsSchema = z
   .object({
@@ -15,11 +46,8 @@ export const eventBasicsSchema = z
     startDate: isoDate,
     endDate: isoDate,
   })
-  // ISO dates compare correctly as strings.
-  .refine((basics) => basics.endDate >= basics.startDate, {
-    message: "The end date cannot be before the start date.",
-    path: ["endDate"],
-  });
+  .refine(endsOnOrAfterStart, endBeforeStartError)
+  .refine(lastsAtMostMaxDays, tooLongError);
 export type EventBasics = z.infer<typeof eventBasicsSchema>;
 
 // Budget in öre, or null when the salesperson has not set one.
@@ -65,8 +93,18 @@ export const eventBasicsDraftSchema = z
     endDate: z.string().min(1, "Pick an end date.").pipe(isoDate),
     budgetKronor: budgetField,
   })
-  .refine((draft) => draft.endDate >= draft.startDate, {
-    message: "The end date cannot be before the start date.",
-    path: ["endDate"],
+  .refine(endsOnOrAfterStart, endBeforeStartError)
+  .refine(lastsAtMostMaxDays, tooLongError)
+  // Only the wizard checks this: a draft for a date that has since passed is still valid.
+  .refine((draft) => !hasValidDates(draft) || draft.startDate >= todayIsoDate(), {
+    message: "The start date cannot be in the past.",
+    path: ["startDate"],
   })
   .transform(({ budgetKronor, ...basics }) => ({ basics, budgetOre: budgetKronor }));
+
+// Today as a local calendar date, YYYY-MM-DD.
+export function todayIsoDate(now: Date = new Date()) {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}

@@ -1,10 +1,19 @@
-import { describe, expect, it } from "vitest";
-import { eventBasicsDraftSchema, eventBasicsSchema } from "./event-basics";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { eventBasicsDraftSchema, eventBasicsSchema, todayIsoDate } from "./event-basics";
 import { customerDetailsDraftSchema, emptyCustomerDetailsDraft } from "./customer";
-import { packageSelectionSchema } from "./package-selection";
+import { MAX_QUANTITY, packageSelectionSchema } from "./package-selection";
 import { createProposalRequestSchema } from "./proposal";
 
 const draft = { guests: "40", startDate: "2026-10-14", endDate: "2026-10-15", budgetKronor: "" };
+
+// The draft schema refuses past start dates, so the tests run on a fixed day.
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 1, 12));
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 function firstMessage(result: { error?: { issues: { message: string }[] } }) {
   return result.error?.issues[0]?.message;
@@ -15,6 +24,27 @@ describe("eventBasicsSchema", () => {
     const basics = { startDate: "2026-10-14", endDate: "2026-10-14" };
     expect(eventBasicsSchema.safeParse({ guests: 500, ...basics }).success).toBe(true);
     expect(eventBasicsSchema.safeParse({ guests: 501, ...basics }).success).toBe(false);
+  });
+
+  it("allows events of at most 30 days", () => {
+    const thirtyDays = { guests: 10, startDate: "2026-10-01", endDate: "2026-10-30" };
+    expect(eventBasicsSchema.safeParse(thirtyDays).success).toBe(true);
+    const result = eventBasicsSchema.safeParse({ ...thirtyDays, endDate: "2026-10-31" });
+    expect(result.error?.issues[0]).toMatchObject({
+      path: ["endDate"],
+      message: "An event can last at most 30 days.",
+    });
+  });
+
+  it("accepts past dates, so a draft can be created for any date", () => {
+    const past = { guests: 10, startDate: "2020-01-01", endDate: "2020-01-02" };
+    expect(eventBasicsSchema.safeParse(past).success).toBe(true);
+  });
+});
+
+describe("todayIsoDate", () => {
+  it("formats the local calendar date", () => {
+    expect(todayIsoDate(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
   });
 });
 
@@ -59,6 +89,21 @@ describe("eventBasicsDraftSchema", () => {
     });
   });
 
+  it("rejects a start date in the past but allows today", () => {
+    const result = eventBasicsDraftSchema.safeParse({ ...draft, startDate: "2026-09-30" });
+    expect(result.error?.issues[0]).toMatchObject({
+      path: ["startDate"],
+      message: "The start date cannot be in the past.",
+    });
+    const today = { ...draft, startDate: "2026-10-01", endDate: "2026-10-01" };
+    expect(eventBasicsDraftSchema.safeParse(today).success).toBe(true);
+  });
+
+  it("rejects an event longer than 30 days", () => {
+    const result = eventBasicsDraftSchema.safeParse({ ...draft, endDate: "2026-11-30" });
+    expect(firstMessage(result)).toBe("An event can last at most 30 days.");
+  });
+
   it("rejects a budget that is not a positive whole number", () => {
     expect(eventBasicsDraftSchema.safeParse({ ...draft, budgetKronor: "abc" }).success).toBe(
       false,
@@ -92,6 +137,21 @@ describe("packageSelectionSchema", () => {
     expect(packageSelectionSchema.safeParse({ ...selection, templateId: "gala" }).success).toBe(
       false,
     );
+  });
+
+  it("caps quantities and the number of changed items", () => {
+    const at = (quantity: number) => ({ ...selection, overrides: { "4": quantity } });
+    expect(packageSelectionSchema.safeParse(at(MAX_QUANTITY)).success).toBe(true);
+    expect(packageSelectionSchema.safeParse(at(MAX_QUANTITY + 1)).success).toBe(false);
+
+    const manyIds = Array.from({ length: 101 }, (_, index) => index + 1);
+    expect(
+      packageSelectionSchema.safeParse({ ...selection, addedContentIds: manyIds }).success,
+    ).toBe(false);
+    const manyOverrides = Object.fromEntries(manyIds.map((id) => [String(id), 1]));
+    expect(
+      packageSelectionSchema.safeParse({ ...selection, overrides: manyOverrides }).success,
+    ).toBe(false);
   });
 });
 
