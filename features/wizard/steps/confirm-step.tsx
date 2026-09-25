@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { unitLabel } from "@/lib/catalog/labels";
-import { formatDateRange, formatKronor } from "@/lib/format";
+import { formatDateRange, formatKronor, plural } from "@/lib/format";
 import {
   eventLength,
   type CapacityIssue,
@@ -179,8 +179,4 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
       </TableFooter>
     </Table>
   );
-}
-
-function plural(count: number, word: string) {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
 }

@@ -2,7 +2,7 @@
 // Pure apart from the server-only guard, so it is easy to test.
 import "server-only";
 import { CATALOG_LANGUAGE } from "@/lib/catalog/merge";
-import { formatDateRange } from "@/lib/format";
+import { formatDateRange, plural } from "@/lib/format";
 import { eventLength, type LineItem, type PackageSummary } from "@/lib/package";
 import type { CustomerDetails } from "@/lib/schemas/customer";
 import type { EventBasics } from "@/lib/schemas/event-basics";
@@ -58,7 +58,7 @@ function proposalDescription(basics: EventBasics) {
   const { days } = eventLength(basics.startDate, basics.endDate);
   return [
     `- **Guests:** ${basics.guests}`,
-    `- **Dates:** ${formatDateRange(basics.startDate, basics.endDate)} (${days} ${days === 1 ? "day" : "days"})`,
+    `- **Dates:** ${formatDateRange(basics.startDate, basics.endDate)} (${plural(days, "day")})`,
     "",
     "All prices exclude tax.",
   ].join("\n");
@@ -71,13 +71,9 @@ function productBlock(line: LineItem) {
     title: line.title,
     currency: PROPOSAL_CURRENCY,
     quantity: line.quantity,
-    unit_value_without_discount_without_tax: toProposalesAmount(line.unitPriceOre),
+    // Proposales takes amounts in the smallest currency unit, so öre are sent as they are.
+    unit_value_without_discount_without_tax: line.unitPriceOre,
   };
-}
-
-// Proposales takes amounts in the smallest currency unit, so öre are sent as they are.
-export function toProposalesAmount(ore: number) {
-  return ore;
 }
 
 // "Anna Maria Berg" becomes first name "Anna" and last name "Maria Berg".

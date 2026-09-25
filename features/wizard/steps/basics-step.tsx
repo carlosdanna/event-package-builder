@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { plural } from "@/lib/format";
 import { eventLength } from "@/lib/package";
 import {
   MAX_EVENT_DAYS,
@@ -15,6 +16,7 @@ import {
   type EventBasicsDraft,
 } from "@/lib/schemas/event-basics";
 import { Field } from "./field";
+import { fieldErrors } from "./field-errors";
 
 type FieldName = keyof EventBasicsDraft;
 
@@ -26,7 +28,7 @@ type BasicsStepProps = {
 
 export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
-  const errors = fieldErrors(draft);
+  const errors = fieldErrors<FieldName>(eventBasicsDraftSchema, draft);
   const errorFor = (field: FieldName) => (showAllErrors || touched[field] ? errors[field] : undefined);
   const touch = (field: FieldName) => setTouched((current) => ({ ...current, [field]: true }));
 
@@ -186,16 +188,6 @@ function lastEndDate(startDate: string) {
   return toIsoDate(addDays(fromIsoDate(startDate), MAX_EVENT_DAYS - 1));
 }
 
-function fieldErrors(draft: EventBasicsDraft) {
-  const result = eventBasicsDraftSchema.safeParse(draft);
-  const errors: Partial<Record<FieldName, string>> = {};
-  for (const issue of result.error?.issues ?? []) {
-    const field = issue.path[0] as FieldName;
-    errors[field] ??= issue.message;
-  }
-  return errors;
-}
-
 // Calendar dates are local days, so they are read and written without time zones.
 function fromIsoDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
@@ -204,8 +196,4 @@ function fromIsoDate(value: string) {
 
 function toIsoDate(date: Date) {
   return format(date, "yyyy-MM-dd");
-}
-
-function plural(count: number, word: string) {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
 }

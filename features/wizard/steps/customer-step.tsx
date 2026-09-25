@@ -9,6 +9,7 @@ import {
   type CustomerDetailsDraft,
 } from "@/lib/schemas/customer";
 import { Field } from "./field";
+import { fieldErrors } from "./field-errors";
 
 type FieldName = keyof CustomerDetailsDraft;
 
@@ -20,7 +21,7 @@ type CustomerStepProps = {
 
 export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepProps) {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
-  const errors = fieldErrors(draft);
+  const errors = fieldErrors<FieldName>(customerDetailsDraftSchema, draft);
   const errorFor = (field: FieldName) => (showAllErrors || touched[field] ? errors[field] : undefined);
   const touch = (field: FieldName) => setTouched((current) => ({ ...current, [field]: true }));
 
@@ -94,14 +95,4 @@ export function CustomerStep({ draft, showAllErrors, onChange }: CustomerStepPro
       </Field>
     </div>
   );
-}
-
-function fieldErrors(draft: CustomerDetailsDraft) {
-  const result = customerDetailsDraftSchema.safeParse(draft);
-  const errors: Partial<Record<FieldName, string>> = {};
-  for (const issue of result.error?.issues ?? []) {
-    const field = issue.path[0] as FieldName;
-    errors[field] ??= issue.message;
-  }
-  return errors;
 }
