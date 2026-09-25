@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { contentListResponseSchema, routeErrorSchema } from "@/lib/schemas";
+import { catalogResponseSchema, routeErrorSchema } from "@/lib/schemas";
 
 async function fetchContent() {
   const response = await fetch("/api/content");
@@ -10,9 +10,9 @@ async function fetchContent() {
 
   if (!response.ok) {
     const parsed = routeErrorSchema.safeParse(body);
-    throw new Error(parsed.success ? parsed.data.error : "Could not load content.");
+    throw new Error(parsed.success ? parsed.data.error : "Could not load the catalog.");
   }
-  return contentListResponseSchema.parse(body);
+  return catalogResponseSchema.parse(body);
 }
 
 export function useContent() {
@@ -35,7 +35,7 @@ export function ContentCount() {
   const count = data.items.length;
   return (
     <p className="text-sm text-muted-foreground">
-      {count} content {count === 1 ? "item" : "items"} in Proposales
+      {count} catalog {count === 1 ? "item" : "items"} from Proposales
     </p>
   );
 }

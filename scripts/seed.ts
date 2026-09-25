@@ -1,6 +1,7 @@
-// Seeds Proposales with the "Hotel Skeppsholmen Demo" content from lib/catalog.
+// Seeds Proposales with the "Hotel Skeppsholmen Demo" content from lib/catalog/metadata.ts.
 //
-//   pnpm seed             creates missing items, restores archived ones, skips the rest
+//   pnpm seed             creates missing items, restores archived ones, updates
+//                         descriptions whose price text changed, and archives retired items
 //   pnpm seed --cleanup   archives every catalog item (can be restored by seeding again)
 //
 // Items are matched by their English title.
@@ -11,18 +12,26 @@ import {
   ProposalesError,
   resolveCompanyId,
   restoreContent,
+  updateContent,
   type ContentItem,
 } from "@/lib/proposales";
 import {
-  catalog,
+  catalogMetadata,
   CATALOG_LANGUAGE,
   contentTitle,
-  type CatalogItem,
+  type CatalogMetadata,
   type PricingUnit,
 } from "@/lib/catalog";
 
-type Outcome = "created" | "restored" | "skipped" | "archived" | "failed";
+type Outcome = "created" | "restored" | "updated" | "skipped" | "archived" | "failed";
 type Row = { title: string; outcome: Outcome; note?: string };
+
+// Content an earlier seed created that is no longer part of the catalog.
+const retiredTitles = [
+  "Full-day conference package",
+  "Wedding package",
+  "Offsite day package",
+];
 
 const unitLabels: Record<PricingUnit, string> = {
   per_person: "per person",
@@ -40,9 +49,9 @@ function formatKronor(ore: number) {
   }).format(ore / 100);
 }
 
-function describe(item: CatalogItem) {
-  const price = `${formatKronor(item.unitPriceOre)} ${unitLabels[item.pricingUnit]}, excluding tax.`;
-  return `${item.description}\n\nPrice: ${price}`;
+function describe(entry: CatalogMetadata) {
+  const price = `${formatKronor(entry.priceOre)} ${unitLabels[entry.unit]}, excluding tax.`;
+  return `${entry.description}\n\nPrice: ${price}`;
 }
 
 function isArchived(content: ContentItem) {
@@ -70,68 +79,101 @@ async function seed(companyId: number, existing: Map<string, ContentItem>) {
   const rows: Row[] = [];
   const toRestore: { title: string; productId: number }[] = [];
 
-  for (const item of catalog) {
-    const found = existing.get(item.title);
-    if (found && !isArchived(found)) {
-      rows.push({ title: item.title, outcome: "skipped", note: "already exists" });
+  for (const [title, entry] of Object.entries(catalogMetadata)) {
+    const found = existing.get(title);
+    if (!found) {
+      rows.push(await create(companyId, title, entry));
       continue;
     }
-    if (found) {
-      toRestore.push({ title: item.title, productId: found.product_id });
-      continue;
-    }
-    try {
-      const created = await createContent({
-        company_id: companyId,
-        language: CATALOG_LANGUAGE,
-        title: item.title,
-        description: describe(item),
-      });
-      rows.push({ title: item.title, outcome: "created", note: `product ${created.product_id}` });
-    } catch (error) {
-      rows.push({ title: item.title, outcome: "failed", note: errorNote(error) });
+
+    // Updating works on archived content too, so restored items get the new text.
+    const updated = await updateDescription(found, title, entry);
+    if (updated.outcome === "failed" || !isArchived(found)) {
+      rows.push(updated);
+    } else {
+      toRestore.push({ title, productId: found.product_id });
     }
   }
 
   if (toRestore.length > 0) {
-    try {
-      await restoreContent(toRestore.map((entry) => entry.productId));
-      for (const entry of toRestore) {
-        rows.push({ title: entry.title, outcome: "restored", note: `product ${entry.productId}` });
-      }
-    } catch (error) {
-      for (const entry of toRestore) {
-        rows.push({ title: entry.title, outcome: "failed", note: errorNote(error) });
-      }
-    }
+    rows.push(...(await runBulk(toRestore, "restored", restoreContent)));
+  }
+
+  const toRetire: { title: string; productId: number }[] = [];
+  for (const title of retiredTitles) {
+    const found = existing.get(title);
+    if (found && !isArchived(found)) toRetire.push({ title, productId: found.product_id });
+  }
+  if (toRetire.length > 0) {
+    rows.push(...(await runBulk(toRetire, "archived", archiveContent)));
   }
   return rows;
+}
+
+async function create(companyId: number, title: string, entry: CatalogMetadata): Promise<Row> {
+  try {
+    const created = await createContent({
+      company_id: companyId,
+      language: CATALOG_LANGUAGE,
+      title,
+      description: describe(entry),
+    });
+    return { title, outcome: "created", note: `product ${created.product_id}` };
+  } catch (error) {
+    return { title, outcome: "failed", note: errorNote(error) };
+  }
+}
+
+async function updateDescription(
+  found: ContentItem,
+  title: string,
+  entry: CatalogMetadata,
+): Promise<Row> {
+  const description = describe(entry);
+  if (found.description[CATALOG_LANGUAGE] === description) {
+    return { title, outcome: "skipped", note: "already up to date" };
+  }
+  try {
+    await updateContent({
+      variation_id: found.variation_id,
+      language: CATALOG_LANGUAGE,
+      description,
+    });
+    return { title, outcome: "updated", note: `product ${found.product_id}` };
+  } catch (error) {
+    return { title, outcome: "failed", note: errorNote(error) };
+  }
+}
+
+// Archives or restores several products in one request.
+async function runBulk(
+  entries: { title: string; productId: number }[],
+  outcome: "archived" | "restored",
+  action: (productIds: number[]) => Promise<unknown>,
+): Promise<Row[]> {
+  try {
+    await action(entries.map((entry) => entry.productId));
+    return entries.map((entry) => ({ title: entry.title, outcome, note: `product ${entry.productId}` }));
+  } catch (error) {
+    return entries.map((entry) => ({ title: entry.title, outcome: "failed", note: errorNote(error) }));
+  }
 }
 
 async function cleanup(existing: Map<string, ContentItem>) {
   const rows: Row[] = [];
   const toArchive: { title: string; productId: number }[] = [];
 
-  for (const item of catalog) {
-    const found = existing.get(item.title);
+  for (const title of Object.keys(catalogMetadata)) {
+    const found = existing.get(title);
     if (found && !isArchived(found)) {
-      toArchive.push({ title: item.title, productId: found.product_id });
+      toArchive.push({ title, productId: found.product_id });
     } else {
-      rows.push({ title: item.title, outcome: "skipped", note: "not active" });
+      rows.push({ title, outcome: "skipped", note: "not active" });
     }
   }
 
   if (toArchive.length > 0) {
-    try {
-      await archiveContent(toArchive.map((entry) => entry.productId));
-      for (const entry of toArchive) {
-        rows.push({ title: entry.title, outcome: "archived", note: `product ${entry.productId}` });
-      }
-    } catch (error) {
-      for (const entry of toArchive) {
-        rows.push({ title: entry.title, outcome: "failed", note: errorNote(error) });
-      }
-    }
+    rows.push(...(await runBulk(toArchive, "archived", archiveContent)));
   }
   return rows;
 }

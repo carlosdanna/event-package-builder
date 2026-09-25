@@ -1,18 +1,11 @@
 // Response of this app's GET /api/content, shared by the route and the browser.
 import { z } from "zod";
+import { catalogItemSchema } from "@/lib/catalog/schema";
 
-export const contentListItemSchema = z.object({
-  productId: z.number().int(),
-  variationId: z.number().int(),
-  title: z.string(),
-  description: z.string(),
+export const catalogResponseSchema = z.object({
+  items: z.array(catalogItemSchema),
 });
-export type ContentListItem = z.infer<typeof contentListItemSchema>;
-
-export const contentListResponseSchema = z.object({
-  items: z.array(contentListItemSchema),
-});
-export type ContentListResponse = z.infer<typeof contentListResponseSchema>;
+export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
 
 // Error body returned by this app's route handlers.
 export const routeErrorSchema = z.object({ error: z.string() });
