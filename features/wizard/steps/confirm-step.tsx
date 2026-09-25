@@ -30,7 +30,7 @@ type ConfirmStepProps = {
   budgetOre: number | null;
   lines: LineItem[];
   summary: PackageSummary;
-  capacityIssues: CapacityIssue[];
+  issues: CapacityIssue[];
   customer: CustomerDetails;
   pending: boolean;
   onEdit: (step: number) => void;
@@ -39,9 +39,10 @@ type ConfirmStepProps = {
 
 // Read-only check of everything before the draft is created.
 export function ConfirmStep(props: ConfirmStepProps) {
-  const { template, basics, budgetOre, lines, summary, capacityIssues, customer } = props;
+  const { template, basics, budgetOre, lines, summary, issues, customer } = props;
   const { days } = eventLength(basics.startDate, basics.endDate);
   const isEmpty = !lines.some((line) => line.quantity > 0);
+  const hasIssues = issues.length > 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -57,7 +58,7 @@ export function ConfirmStep(props: ConfirmStepProps) {
       </ReviewSection>
 
       <ReviewSection title="Package" onEdit={() => props.onEdit(2)} editLabel="Edit the package">
-        {capacityIssues.map((issue) => (
+        {issues.map((issue) => (
           <p key={issue.contentId} className="flex items-center gap-2 text-sm text-destructive">
             <CircleAlertIcon aria-hidden className="size-4 shrink-0" />
             {issue.title}: {issue.reason}
@@ -85,9 +86,11 @@ export function ConfirmStep(props: ConfirmStepProps) {
         <p className="text-sm text-muted-foreground">
           {isEmpty
             ? "Add at least one item to the package first."
-            : "Creates a draft in Proposales. Nothing is sent to the customer."}
+            : hasIssues
+              ? "Fix the package above before creating the draft."
+              : "Creates a draft in Proposales. Nothing is sent to the customer."}
         </p>
-        <Button size="lg" onClick={props.onCreate} disabled={props.pending || isEmpty}>
+        <Button size="lg" onClick={props.onCreate} disabled={props.pending || isEmpty || hasIssues}>
           {props.pending && <LoaderCircleIcon aria-hidden className="animate-spin" />}
           {props.pending ? "Creating draft…" : "Create draft proposal"}
         </Button>

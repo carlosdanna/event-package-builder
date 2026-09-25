@@ -3,9 +3,9 @@
 import type { CatalogItem } from "@/lib/catalog/schema";
 import type { EventBasics } from "@/lib/schemas/event-basics";
 import type { Template } from "@/lib/templates/schema";
-import { buildPackage, type LineItem } from "./build";
+import { buildPackage, toLine, type LineItem } from "./build";
 import { applyOverride } from "./overrides";
-import { quantityFor, roomsFor } from "./quantity";
+import { roomsFor } from "./quantity";
 
 // Double rooms, when the template does not say how many guests share a room.
 const DEFAULT_GUESTS_PER_ROOM = 2;
@@ -50,15 +50,7 @@ function addedLines(
     const item = catalog.find((entry) => entry.contentId === contentId);
     if (!item || present.has(contentId)) continue;
     present.add(contentId);
-    const quantity = quantityFor(item, basics, roomsCountFor(template, basics.guests));
-    lines.push({
-      ...item,
-      unitPriceOre: item.priceOre,
-      derivedQuantity: quantity,
-      quantity,
-      lineTotalOre: item.priceOre * quantity,
-      source: "derived",
-    });
+    lines.push(toLine(item, basics, roomsCountFor(template, basics.guests)));
   }
   return lines;
 }
