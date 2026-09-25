@@ -25,6 +25,7 @@ pnpm dev                     # http://localhost:3000
 | --- | --- | --- |
 | `PROPOSALES_API_KEY` | Yes | Bearer token for the Proposales developer interface. Only the server reads it. It never reaches the browser, so never give it a `NEXT_PUBLIC_` prefix. |
 | `PROPOSALES_COMPANY_ID` | No | The Proposales company to use. When empty, the app uses the only company the token can see. |
+| `APP_PASSWORD` | Yes | The shared password on the sign-in screen. Only the server reads it. Changing it signs everyone out, and when it is empty nobody can sign in. |
 
 ### Seed script
 
@@ -57,6 +58,12 @@ The line total is the unit price times the quantity, and the subtotal is the sum
 
 The full-day conference for 45 guests over 2 days comes to 69,000 kronor. The Harbour Room seats 50 and is the smallest room that fits. That makes 36,000 kronor for the room, 8,550 for coffee breaks, 22,050 for lunch and 2,400 for the projector. Prices exclude tax. The interface shows whole kronor.
 
+### Physical limits
+
+Some items only exist so many times: each meeting space once, 40 standard doubles, 20 superior doubles, 4 suites, 3 projectors and 2 microphone sets. The number is `available` in `lib/catalog/metadata.ts`. Catering has no such limit and grows with the guests.
+
+A limited item can be booked at most `available` times per day (meeting spaces, projectors), per night (rooms) or for the whole event (microphone sets). When the rules call for more, the suggestion stops at what exists and the line says how many must be arranged elsewhere. The quantity box will not go higher, and a package that goes over a limit, or has a meeting space too small for the guests, cannot be created: the confirm button is disabled and the server refuses it as well. These are the hotel's totals, not a check against real bookings for the dates.
+
 ## Design decisions
 
 ### Pure pricing functions shared by browser and server
@@ -85,7 +92,8 @@ A proposal stores product blocks with a quantity and a unit price, so the draft 
 
 ## What I would do next with more time
 
-- **Access control.** Anyone with the link can create drafts and see recent draft titles. I would put the app behind the hotel's sign-in, or at least Vercel's deployment protection.
+- **Real sign-in.** The app is behind one shared password, checked in `proxy.ts`, with a session cookie derived from it. That keeps casual visitors out, but everyone shares one secret and there is no limit on guesses. I would move to the hotel's own sign-in, with a person behind every draft.
+- **Real availability.** Limits are the hotel's totals. Checking rooms and spaces against bookings for the chosen dates would need a booking system to ask.
 - **Safe retries.** If Proposales creates a draft but the answer times out, trying again makes a second draft. The app warns about this. With an idempotency key from Proposales, or a check for a matching recent draft, it would not happen.
 - **Prices in one place.** Move prices and units out of the code into Proposales, if its content model grows to hold them, or into a small store the hotel can edit.
 - **Caching the catalog on the server**, so each draft makes one call to Proposales instead of two.

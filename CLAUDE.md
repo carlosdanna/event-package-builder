@@ -20,12 +20,19 @@ and creates a draft proposal in Proposales with one click.
 ## Hard rules
 - PROPOSALES_API_KEY is read only on the server, from environment variables.
   Never expose it to the browser, never prefix it with NEXT_PUBLIC.
+- APP_PASSWORD (the shared sign-in password) is also read only on the server.
+  proxy.ts requires the session cookie for every page and route handler except
+  /login and /api/session.
 - The browser only calls this app's own route handlers.
 - lib/proposales imports "server-only".
 - All pricing and quantity logic lives in lib/package as pure functions,
   shared by the browser (live summary) and the server (recalculated before
   creating the draft). Never trust totals sent from the browser.
 - Prices are integers in öre. Format as kronor only in the interface.
+- Meeting spaces, rooms and equipment have a physical limit (`available` in
+  lib/catalog/metadata.ts); catering has none. A package over a limit, or with
+  a space too small for the guests, cannot be created (checked in the browser
+  and again on the server with packageIssues).
 - Nothing is written to Proposales without an explicit user confirm.
 
 ## Pricing units
@@ -42,12 +49,14 @@ Full-day conference, wedding, team offsite, private dinner, product launch.
 Each defines event type, default items by content title, and a rooms rule.
 
 ## Folder layout
-- app/ page, layout and error screen only
-- app/api/content, app/api/proposals route handlers
+- app/ page, layout, error screen and login page only
+- app/api/content, app/api/proposals, app/api/session route handlers
+- proxy.ts sign-in check in front of every request
 - features/wizard (wizard, reducer, steps/, summary.tsx, done screen),
-  features/drafts (create and list drafts), features/catalog, features/shared
+  features/drafts (create and list drafts), features/catalog, features/auth
+  (login form, sign out), features/shared
 - components/ui shadcn components, components/ app-wide providers and theme toggle
-- lib/proposales, lib/package, lib/templates, lib/catalog, lib/schemas
+- lib/proposales, lib/package, lib/templates, lib/catalog, lib/schemas, lib/auth
 - scripts/seed.ts
 
 ## Commits
