@@ -1,5 +1,6 @@
 // Zod schemas for the catalog. Safe to import in the browser.
 import { z } from "zod";
+import { currencySchema } from "@/lib/money";
 
 export const pricingUnitSchema = z.enum([
   "per_person",
@@ -23,7 +24,8 @@ export type CatalogCategory = z.infer<typeof catalogCategorySchema>;
 const pricingFields = {
   category: catalogCategorySchema,
   unit: pricingUnitSchema,
-  priceOre: z.number().int().nonnegative(), // excluding tax
+  // One price per currency, excluding tax. Every supported currency must be listed.
+  prices: z.record(currencySchema, z.number().int().nonnegative()),
   capacity: z.number().int().positive().optional(), // meeting spaces only
   // How many the hotel has, such as 40 rooms or 1 hall. Missing means there is
   // no physical limit, as for catering.

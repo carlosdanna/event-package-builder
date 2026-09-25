@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return Response.json({ error: message }, { status: 400 });
   }
 
-  const { templateId, basics, customer, ...choices } = parsed.data;
+  const { templateId, basics, currency, customer, ...choices } = parsed.data;
   const template = getTemplate(templateId);
   if (!template) {
     return Response.json({ error: "Unknown template." }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   try {
     const companyId = await resolveCompanyId();
     const catalog = await getCatalog(companyId);
-    const lines = assemblePackage(template, basics, catalog, choices);
+    const lines = assemblePackage(template, basics, catalog, choices, currency);
     const summary = summarize(lines, basics);
     if (!lines.some((line) => line.quantity > 0)) {
       return Response.json({ error: "The package is empty." }, { status: 400 });
@@ -45,7 +45,15 @@ export async function POST(request: Request) {
       return Response.json({ error: `${issue.title}: ${issue.reason}.` }, { status: 400 });
     }
 
-    const input = buildCreateProposalInput({ companyId, template, basics, lines, summary, customer });
+    const input = buildCreateProposalInput({
+      companyId,
+      template,
+      basics,
+      currency,
+      lines,
+      summary,
+      customer,
+    });
     const created = await createProposal(input);
 
     return Response.json(
@@ -53,7 +61,8 @@ export async function POST(request: Request) {
         uuid: created.uuid,
         url: created.url,
         title: proposalTitle(template, basics, customer),
-        subtotalOre: summary.subtotalOre,
+        subtotal: summary.subtotal,
+        currency,
       }),
       { status: 201 },
     );

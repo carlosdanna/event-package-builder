@@ -12,20 +12,23 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { catalogCategorySchema, type CatalogItem } from "@/lib/catalog/schema";
 import { availableLabel, categoryLabel, unitLabel } from "@/lib/catalog/labels";
-import { formatKronor } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import type { Currency } from "@/lib/money";
 import { meetingSpaceIssue } from "@/lib/package";
 
 type AddItemDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: CatalogItem[];
+  currency: Currency;
   guests: number;
   onAdd: (contentId: number) => void;
 };
 
 // Searchable list of catalog items not yet in the package. Meeting spaces
 // that cannot seat every guest are shown but disabled, with the reason.
-export function AddItemDialog({ open, onOpenChange, items, guests, onAdd }: AddItemDialogProps) {
+export function AddItemDialog(props: AddItemDialogProps) {
+  const { open, onOpenChange, items, currency, guests, onAdd } = props;
   return (
     <CommandDialog
       open={open}
@@ -61,7 +64,7 @@ export function AddItemDialog({ open, onOpenChange, items, guests, onAdd }: AddI
                         <span>{item.title}</span>
                         <Typography as="span" size="xs" color="muted">
                           {issue ??
-                            `${formatKronor(item.priceOre)} ${unitLabel(item.unit)}${available ? ` · ${available}` : ""}`}
+                            `${formatMoney(item.prices[currency], currency)} ${unitLabel(item.unit)}${available ? ` · ${available}` : ""}`}
                         </Typography>
                       </span>
                     </CommandItem>

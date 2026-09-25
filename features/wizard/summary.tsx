@@ -15,14 +15,16 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { formatKronor } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import type { Currency } from "@/lib/money";
 import { budgetUsage, type LineItem, type PackageSummary } from "@/lib/package";
 import { cn } from "@/lib/utils";
 
 export type SummaryProps = {
   lines: LineItem[];
   summary: PackageSummary | null; // null until a template and valid basics exist
-  budgetOre: number | null;
+  budget: number | null;
+  currency: Currency;
 };
 
 // Live package summary for wide screens, beside the current step.
@@ -41,7 +43,7 @@ export function Summary(props: SummaryProps) {
 
 // On phones the summary is a bar with the total that opens a sheet with the details.
 export function MobileSummaryBar(props: SummaryProps) {
-  const total = props.summary ? formatKronor(props.summary.subtotalOre) : "No package yet";
+  const total = props.summary ? formatMoney(props.summary.subtotal, props.currency) : "No package yet";
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
@@ -79,7 +81,7 @@ export function MobileSummaryBar(props: SummaryProps) {
   );
 }
 
-export function SummaryContent({ lines, summary, budgetOre }: SummaryProps) {
+export function SummaryContent({ lines, summary, budget, currency }: SummaryProps) {
   if (!summary) {
     return (
       <Typography size="sm" color="muted">
@@ -100,7 +102,7 @@ export function SummaryContent({ lines, summary, budgetOre }: SummaryProps) {
                 {line.title}
                 <Typography as="span" color="muted"> × {line.quantity}</Typography>
               </span>
-              <span className="shrink-0 tabular-nums">{formatKronor(line.lineTotalOre)}</span>
+              <span className="shrink-0 tabular-nums">{formatMoney(line.lineTotal, currency)}</span>
             </li>
           ))}
         </ul>
@@ -112,19 +114,24 @@ export function SummaryContent({ lines, summary, budgetOre }: SummaryProps) {
         <div className="flex justify-between gap-3">
           <dt className="font-medium">Subtotal</dt>
           <dd className="font-semibold tabular-nums" aria-live="polite">
-            {formatKronor(summary.subtotalOre)}
+            {formatMoney(summary.subtotal, currency)}
           </dd>
         </div>
-        {summary.perPersonOre !== null && (
+        {summary.perPerson !== null && (
           <div className="flex justify-between gap-3 text-muted-foreground">
             <dt>Per person</dt>
-            <dd className="tabular-nums">{formatKronor(summary.perPersonOre)}</dd>
+            <dd className="tabular-nums">{formatMoney(summary.perPerson, currency)}</dd>
           </div>
         )}
         <Typography size="xs" color="muted">Prices exclude tax.</Typography>
       </dl>
 
-      <BudgetBar subtotalOre={summary.subtotalOre} budgetOre={budgetOre} status={summary.budget} />
+      <BudgetBar
+        subtotal={summary.subtotal}
+        budget={budget}
+        currency={currency}
+        status={summary.budgetStatus}
+      />
     </div>
   );
 }
@@ -142,18 +149,19 @@ const budgetColours = {
 } as const;
 
 type BudgetBarProps = {
-  subtotalOre: number;
-  budgetOre: number | null;
-  status: PackageSummary["budget"];
+  subtotal: number;
+  budget: number | null;
+  currency: Currency;
+  status: PackageSummary["budgetStatus"];
 };
 
-function BudgetBar({ subtotalOre, budgetOre, status }: BudgetBarProps) {
-  const usage = budgetUsage(subtotalOre, budgetOre);
-  if (!usage || budgetOre === null || status === "none") return null;
+function BudgetBar({ subtotal, budget, currency, status }: BudgetBarProps) {
+  const usage = budgetUsage(subtotal, budget);
+  if (!usage || budget === null || status === "none") return null;
   const colours = budgetColours[status];
   const text =
-    usage.overOre > 0
-      ? `${formatKronor(usage.overOre)} over budget`
+    usage.over > 0
+      ? `${formatMoney(usage.over, currency)} over budget`
       : `${usage.percent}% of budget`;
 
   return (
@@ -161,7 +169,7 @@ function BudgetBar({ subtotalOre, budgetOre, status }: BudgetBarProps) {
       <div className="flex justify-between gap-3 text-sm">
         <span className={cn("font-medium", colours.text)}>{text}</span>
         <Typography as="span" color="muted" className="tabular-nums">
-          {formatKronor(budgetOre)}
+          {formatMoney(budget, currency)}
         </Typography>
       </div>
       <Progress

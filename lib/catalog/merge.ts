@@ -63,7 +63,7 @@ function toCatalogItem(
     title,
     category: entry.category,
     unit: entry.unit,
-    priceOre: entry.priceOre,
+    prices: entry.prices,
   };
   return catalogItemSchema.parse({
     ...item,

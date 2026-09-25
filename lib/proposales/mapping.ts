@@ -3,6 +3,7 @@
 import "server-only";
 import { CATALOG_LANGUAGE } from "@/lib/catalog/merge";
 import { formatDateRange, plural } from "@/lib/format";
+import type { Currency } from "@/lib/money";
 import { eventLength, type LineItem, type PackageSummary } from "@/lib/package";
 import type { CustomerDetails } from "@/lib/schemas/customer";
 import type { EventBasics } from "@/lib/schemas/event-basics";
@@ -11,19 +12,19 @@ import type { CreateProposalInput } from "./schemas";
 
 // Marks drafts made by this app, so recent drafts can be found again.
 export const PROPOSAL_SOURCE = "event-package-builder";
-export const PROPOSAL_CURRENCY = "SEK";
 
 export type ProposalPackage = {
   companyId: number;
   template: Template;
   basics: EventBasics;
+  currency: Currency;
   lines: LineItem[];
   summary: PackageSummary;
   customer: CustomerDetails;
 };
 
 export function buildCreateProposalInput(proposal: ProposalPackage): CreateProposalInput {
-  const { companyId, template, basics, lines, summary, customer } = proposal;
+  const { companyId, template, basics, currency, lines, summary, customer } = proposal;
 
   return {
     company_id: companyId,
@@ -35,7 +36,7 @@ export function buildCreateProposalInput(proposal: ProposalPackage): CreatePropo
       email: customer.contactEmail,
       company_name: customer.company,
     },
-    blocks: lines.filter((line) => line.quantity > 0).map(productBlock),
+    blocks: lines.filter((line) => line.quantity > 0).map((line) => productBlock(line, currency)),
     data: {
       source: PROPOSAL_SOURCE,
       template_id: template.id,
@@ -43,7 +44,8 @@ export function buildCreateProposalInput(proposal: ProposalPackage): CreatePropo
       guests: basics.guests,
       start_date: basics.startDate,
       end_date: basics.endDate,
-      subtotal_ore: summary.subtotalOre,
+      currency,
+      subtotal: summary.subtotal,
       // Internal: data is not shown to the customer.
       ...(customer.notes ? { notes: customer.notes } : {}),
     },
@@ -64,15 +66,15 @@ function proposalDescription(basics: EventBasics) {
   ].join("\n");
 }
 
-function productBlock(line: LineItem) {
+function productBlock(line: LineItem, currency: Currency) {
   return {
     type: "product-block" as const,
     content_id: line.contentId,
     title: line.title,
-    currency: PROPOSAL_CURRENCY,
+    currency,
     quantity: line.quantity,
-    // Proposales takes amounts in the smallest currency unit, so öre are sent as they are.
-    unit_value_without_discount_without_tax: line.unitPriceOre,
+    // Proposales takes amounts in the smallest currency unit, as they are stored here.
+    unit_value_without_discount_without_tax: line.unitPrice,
   };
 }
 

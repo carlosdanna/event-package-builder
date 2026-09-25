@@ -5,37 +5,37 @@ import type { LineItem } from "./build";
 export type BudgetStatus = "none" | "ok" | "near" | "over";
 
 export type PackageSummary = {
-  subtotalOre: number;
-  perPersonOre: number | null;
-  budget: BudgetStatus;
+  subtotal: number;
+  perPerson: number | null;
+  budgetStatus: BudgetStatus;
 };
 
 export function summarize(
   lines: LineItem[],
   basics: Pick<EventBasics, "guests">,
-  budgetOre?: number | null,
+  budget?: number | null,
 ): PackageSummary {
-  const subtotalOre = lines.reduce((sum, line) => sum + line.lineTotalOre, 0);
-  const perPersonOre = basics.guests > 0 ? Math.round(subtotalOre / basics.guests) : null;
-  return { subtotalOre, perPersonOre, budget: budgetStatus(subtotalOre, budgetOre) };
+  const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  const perPerson = basics.guests > 0 ? Math.round(subtotal / basics.guests) : null;
+  return { subtotal, perPerson, budgetStatus: budgetStatus(subtotal, budget) };
 }
 
 // Near means 90% of the budget or more; over means above the budget.
-export function budgetStatus(subtotalOre: number, budgetOre?: number | null): BudgetStatus {
-  if (budgetOre === undefined || budgetOre === null) return "none";
-  if (subtotalOre > budgetOre) return "over";
+export function budgetStatus(subtotal: number, budget?: number | null): BudgetStatus {
+  if (budget === undefined || budget === null) return "none";
+  if (subtotal > budget) return "over";
   // Compared as whole numbers to avoid rounding errors.
-  if (subtotalOre * 10 >= budgetOre * 9) return "near";
+  if (subtotal * 10 >= budget * 9) return "near";
   return "ok";
 }
 
-export type BudgetUsage = { percent: number; overOre: number };
+export type BudgetUsage = { percent: number; over: number };
 
 // How much of the budget the package uses, for the budget bar and its text.
-export function budgetUsage(subtotalOre: number, budgetOre?: number | null): BudgetUsage | null {
-  if (budgetOre === undefined || budgetOre === null || budgetOre <= 0) return null;
+export function budgetUsage(subtotal: number, budget?: number | null): BudgetUsage | null {
+  if (budget === undefined || budget === null || budget <= 0) return null;
   return {
-    percent: Math.round((subtotalOre * 100) / budgetOre),
-    overOre: Math.max(subtotalOre - budgetOre, 0),
+    percent: Math.round((subtotal * 100) / budget),
+    over: Math.max(subtotal - budget, 0),
   };
 }

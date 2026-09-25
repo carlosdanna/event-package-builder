@@ -9,11 +9,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
 import type { CatalogItem } from "@/lib/catalog/schema";
-import { formatKronor } from "@/lib/format";
-import { ESTIMATE_GUESTS, estimatePerPersonOre } from "@/lib/package";
+import { formatMoney } from "@/lib/format";
+import { currencyNames, currencySchema, type Currency } from "@/lib/money";
+import { ESTIMATE_GUESTS, estimatePerPerson } from "@/lib/package";
 import { templates, type Template, type TemplateIcon, type TemplateId } from "@/lib/templates";
+import { Field } from "./field";
 
 const icons: Record<TemplateIcon, LucideIcon> = {
   Presentation: PresentationIcon,
@@ -26,29 +29,74 @@ const icons: Record<TemplateIcon, LucideIcon> = {
 type TemplateStepProps = {
   catalog: CatalogItem[];
   selected: TemplateId | null;
+  currency: Currency;
   onSelect: (templateId: TemplateId) => void;
+  onCurrencyChange: (currency: Currency) => void;
 };
 
-// Radio cards: arrow keys move between templates, like any radio group.
-export function TemplateStep({ catalog, selected, onSelect }: TemplateStepProps) {
+export function TemplateStep(props: TemplateStepProps) {
+  const { catalog, selected, currency, onSelect, onCurrencyChange } = props;
   return (
-    <RadioGroup
-      aria-label="Event template"
-      value={selected ?? ""}
-      onValueChange={(value) => onSelect(value as TemplateId)}
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-    >
-      {templates.map((template) => (
-        <TemplateCard key={template.id} template={template} catalog={catalog} />
-      ))}
-    </RadioGroup>
+    <div className="flex flex-col gap-6">
+      <CurrencyPicker currency={currency} onChange={onCurrencyChange} />
+      {/* Radio cards: arrow keys move between templates, like any radio group. */}
+      <RadioGroup
+        aria-label="Event template"
+        value={selected ?? ""}
+        onValueChange={(value) => onSelect(value as TemplateId)}
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+      >
+        {templates.map((template) => (
+          <TemplateCard
+            key={template.id}
+            template={template}
+            catalog={catalog}
+            currency={currency}
+          />
+        ))}
+      </RadioGroup>
+    </div>
   );
 }
 
-function TemplateCard({ template, catalog }: { template: Template; catalog: CatalogItem[] }) {
+// Each currency has its own price list, so nothing is converted.
+function CurrencyPicker({
+  currency,
+  onChange,
+}: {
+  currency: Currency;
+  onChange: (currency: Currency) => void;
+}) {
+  return (
+    <Field id="currency" label="Currency" hint="Every price in the proposal is in this currency.">
+      {(describedBy) => (
+        <Select value={currency} onValueChange={(value) => onChange(currencySchema.parse(value))}>
+          <SelectTrigger
+            id="currency"
+            className="w-full sm:max-w-56"
+            aria-describedby={describedBy}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {currencySchema.options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {currencyNames[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </Field>
+  );
+}
+
+type TemplateCardProps = { template: Template; catalog: CatalogItem[]; currency: Currency };
+
+function TemplateCard({ template, catalog, currency }: TemplateCardProps) {
   const Icon = icons[template.icon];
   const inputId = `template-${template.id}`;
-  const estimateOre = estimatePerPersonOre(template, catalog);
+  const estimate = estimatePerPerson(template, catalog, currency);
 
   return (
     <label
@@ -74,11 +122,11 @@ function TemplateCard({ template, catalog }: { template: Template; catalog: Cata
         ))}
       </ul>
 
-      {estimateOre !== null && (
+      {estimate !== null && (
         <Typography as="span" size="sm" className="mt-auto">
           From{" "}
           <Typography as="span" weight="medium">
-            {formatKronor(estimateOre)}
+            {formatMoney(estimate, currency)}
           </Typography>{" "}
           per person
           <Typography as="span" color="muted"> for {ESTIMATE_GUESTS} guests</Typography>

@@ -4,7 +4,7 @@ import { customerDetailsDraftSchema, emptyCustomerDetailsDraft } from "./custome
 import { MAX_QUANTITY, packageSelectionSchema } from "./package-selection";
 import { createProposalRequestSchema } from "./proposal";
 
-const draft = { guests: "40", startDate: "2026-10-14", endDate: "2026-10-15", budgetKronor: "" };
+const draft = { guests: "40", startDate: "2026-10-14", endDate: "2026-10-15", budget: "" };
 
 // The draft schema refuses past start dates, so the tests run on a fixed day.
 beforeAll(() => {
@@ -52,15 +52,15 @@ describe("eventBasicsDraftSchema", () => {
   it("reads the typed fields into basics and no budget", () => {
     expect(eventBasicsDraftSchema.parse(draft)).toEqual({
       basics: { guests: 40, startDate: "2026-10-14", endDate: "2026-10-15" },
-      budgetOre: null,
+      budget: null,
     });
   });
 
-  it("reads the budget in kronor as öre, allowing spaces and commas", () => {
-    expect(eventBasicsDraftSchema.parse({ ...draft, budgetKronor: "120,000" }).budgetOre).toBe(
+  it("reads the budget in whole units as the smallest unit, allowing spaces and commas", () => {
+    expect(eventBasicsDraftSchema.parse({ ...draft, budget: "120,000" }).budget).toBe(
       12_000_000,
     );
-    expect(eventBasicsDraftSchema.parse({ ...draft, budgetKronor: " 50 000 " }).budgetOre).toBe(
+    expect(eventBasicsDraftSchema.parse({ ...draft, budget: " 50 000 " }).budget).toBe(
       5_000_000,
     );
   });
@@ -105,11 +105,11 @@ describe("eventBasicsDraftSchema", () => {
   });
 
   it("rejects a budget that is not a positive whole number", () => {
-    expect(eventBasicsDraftSchema.safeParse({ ...draft, budgetKronor: "abc" }).success).toBe(
+    expect(eventBasicsDraftSchema.safeParse({ ...draft, budget: "abc" }).success).toBe(
       false,
     );
-    expect(eventBasicsDraftSchema.safeParse({ ...draft, budgetKronor: "0" }).success).toBe(false);
-    expect(eventBasicsDraftSchema.safeParse({ ...draft, budgetKronor: "12.5" }).success).toBe(
+    expect(eventBasicsDraftSchema.safeParse({ ...draft, budget: "0" }).success).toBe(false);
+    expect(eventBasicsDraftSchema.safeParse({ ...draft, budget: "12.5" }).success).toBe(
       false,
     );
   });
@@ -119,7 +119,8 @@ describe("packageSelectionSchema", () => {
   const selection = {
     templateId: "conference",
     basics: { guests: 40, startDate: "2026-10-14", endDate: "2026-10-15" },
-    budgetOre: null,
+    currency: "EUR",
+    budget: null,
     addedContentIds: [3],
     removedContentIds: [],
     overrides: { "4": 12 },
@@ -200,6 +201,7 @@ describe("createProposalRequestSchema", () => {
   const request = {
     templateId: "conference",
     basics: { guests: 45, startDate: "2026-10-14", endDate: "2026-10-15" },
+    currency: "SEK",
     addedContentIds: [],
     removedContentIds: [],
     overrides: {},
@@ -211,9 +213,21 @@ describe("createProposalRequestSchema", () => {
   });
 
   it("refuses prices or totals sent from the browser", () => {
-    expect(createProposalRequestSchema.safeParse({ ...request, subtotalOre: 1 }).success).toBe(
+    expect(createProposalRequestSchema.safeParse({ ...request, subtotal: 1 }).success).toBe(
       false,
     );
-    expect(createProposalRequestSchema.safeParse({ ...request, budgetOre: 1 }).success).toBe(false);
+    expect(createProposalRequestSchema.safeParse({ ...request, budget: 1 }).success).toBe(false);
+  });
+
+  it("requires a supported currency", () => {
+    expect(createProposalRequestSchema.safeParse({ ...request, currency: undefined }).success).toBe(
+      false,
+    );
+    expect(createProposalRequestSchema.safeParse({ ...request, currency: "JPY" }).success).toBe(
+      false,
+    );
+    for (const currency of ["SEK", "EUR", "USD", "GBP"]) {
+      expect(createProposalRequestSchema.safeParse({ ...request, currency }).success).toBe(true);
+    }
   });
 });

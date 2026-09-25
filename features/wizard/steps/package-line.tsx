@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
 import { availableLabel, unitLabel } from "@/lib/catalog/labels";
-import { formatKronor } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import type { Currency } from "@/lib/money";
 import { shortfall, type CapacityIssue, type LineItem } from "@/lib/package";
 import { MAX_QUANTITY } from "@/lib/schemas/package-selection";
 import { isAllowedQuantity } from "../reducer";
 
 type PackageLineProps = {
   line: LineItem;
+  currency: Currency;
   issue?: CapacityIssue;
   onQuantityChange: (quantity: number) => void;
   onReset: () => void;
@@ -22,6 +24,7 @@ type PackageLineProps = {
 
 export function PackageLine({
   line,
+  currency,
   issue,
   onQuantityChange,
   onReset,
@@ -42,7 +45,7 @@ export function PackageLine({
             {isCustom && <Badge variant="secondary">Custom</Badge>}
           </span>
           <Typography as="span" size="sm" color="muted">
-            {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
+            {formatMoney(line.unitPrice, currency)} {unitLabel(line.unit)}
             {available && ` · ${available}`}
           </Typography>
         </div>
@@ -60,7 +63,7 @@ export function PackageLine({
           weight="medium"
           className="text-right tabular-nums max-sm:col-start-1 max-sm:row-start-2 max-sm:text-left"
         >
-          {formatKronor(line.lineTotalOre)}
+          {formatMoney(line.lineTotal, currency)}
         </Typography>
 
         <div className="flex justify-end gap-1 max-sm:col-start-2 max-sm:row-start-2">

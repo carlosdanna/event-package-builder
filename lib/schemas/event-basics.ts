@@ -1,5 +1,6 @@
 // The guests and dates step, shared by the wizard and the proposal route.
 import { z } from "zod";
+import { toMinorUnits } from "@/lib/money";
 import { eventLength } from "@/lib/package/event-length";
 
 export const MAX_GUESTS = 500;
@@ -50,22 +51,23 @@ export const eventBasicsSchema = z
   .refine(lastsAtMostMaxDays, tooLongError);
 export type EventBasics = z.infer<typeof eventBasicsSchema>;
 
-// Budget in öre, or null when the salesperson has not set one.
-export const budgetOreSchema = z.number().int().positive().nullable();
+// Budget in the smallest unit of the chosen currency, or null when the
+// salesperson has not set one.
+export const budgetSchema = z.number().int().positive().nullable();
 
 // The step's form fields as typed, before they are read as numbers.
 export type EventBasicsDraft = {
   guests: string;
   startDate: string;
   endDate: string;
-  budgetKronor: string;
+  budget: string;
 };
 
 export const emptyEventBasicsDraft: EventBasicsDraft = {
   guests: "",
   startDate: "",
   endDate: "",
-  budgetKronor: "",
+  budget: "",
 };
 
 const wholeNumber = /^\d+$/;
@@ -80,18 +82,18 @@ const budgetField = z
   .string()
   .trim()
   .refine((text) => text === "" || wholeNumber.test(text.replaceAll(/[\s,]/g, "")), {
-    message: "Enter the budget as a whole number of kronor.",
+    message: "Enter the budget as a whole number.",
   })
-  .transform((text) => (text === "" ? null : Number(text.replaceAll(/[\s,]/g, "")) * 100))
-  .refine((ore) => ore === null || ore > 0, { message: "The budget must be more than zero." });
+  .transform((text) => (text === "" ? null : toMinorUnits(Number(text.replaceAll(/[\s,]/g, "")))))
+  .refine((amount) => amount === null || amount > 0, { message: "The budget must be more than zero." });
 
-// Reads the draft into event basics and a budget in öre.
+// Reads the draft into event basics and a budget in the smallest currency unit.
 export const eventBasicsDraftSchema = z
   .object({
     guests: guestsField,
     startDate: z.string().min(1, "Pick a start date.").pipe(isoDate),
     endDate: z.string().min(1, "Pick an end date.").pipe(isoDate),
-    budgetKronor: budgetField,
+    budget: budgetField,
   })
   .refine(endsOnOrAfterStart, endBeforeStartError)
   .refine(lastsAtMostMaxDays, tooLongError)
@@ -100,7 +102,7 @@ export const eventBasicsDraftSchema = z
     message: "The start date cannot be in the past.",
     path: ["startDate"],
   })
-  .transform(({ budgetKronor, ...basics }) => ({ basics, budgetOre: budgetKronor }));
+  .transform(({ budget, ...basics }) => ({ basics, budget }));
 
 // Today as a local calendar date, YYYY-MM-DD.
 export function todayIsoDate(now: Date = new Date()) {

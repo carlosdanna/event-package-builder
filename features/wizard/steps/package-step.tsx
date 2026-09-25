@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { categoryLabel } from "@/lib/catalog/labels";
 import { catalogCategorySchema, type CatalogItem } from "@/lib/catalog/schema";
+import type { Currency } from "@/lib/money";
 import { addableItems, type CapacityIssue, type LineItem } from "@/lib/package";
 import { AddItemDialog } from "./add-item-dialog";
 import { PackageLine } from "./package-line";
@@ -14,6 +15,7 @@ type PackageStepProps = {
   lines: LineItem[];
   catalog: CatalogItem[];
   guests: number;
+  currency: Currency;
   issues: CapacityIssue[];
   onQuantityChange: (line: LineItem, quantity: number) => void;
   onReset: (contentId: number) => void;
@@ -25,6 +27,7 @@ export function PackageStep({
   lines,
   catalog,
   guests,
+  currency,
   issues,
   onQuantityChange,
   onReset,
@@ -56,6 +59,7 @@ export function PackageStep({
                 <PackageLine
                   key={line.contentId}
                   line={line}
+                  currency={currency}
                   issue={issues.find((issue) => issue.contentId === line.contentId)}
                   onQuantityChange={(quantity) => onQuantityChange(line, quantity)}
                   onReset={() => onReset(line.contentId)}
@@ -78,6 +82,7 @@ export function PackageStep({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         items={addable}
+        currency={currency}
         guests={guests}
         onAdd={onAdd}
       />

@@ -115,13 +115,13 @@ describe("roomsFor", () => {
 
 describe("buildPackage", () => {
   it("marks every line as derived", () => {
-    const lines = buildPackage(template("wedding"), { guests: 90, ...oneDay }, testCatalog);
+    const lines = buildPackage(template("wedding"), { guests: 90, ...oneDay }, testCatalog, "SEK");
     expect(lines.every((entry) => entry.source === "derived")).toBe(true);
     expect(lines.every((entry) => entry.quantity === entry.derivedQuantity)).toBe(true);
   });
 
   it("uses the largest space when none fits, so the problem is flagged", () => {
-    const lines = buildPackage(template("conference"), { guests: 200, ...oneDay }, testCatalog);
+    const lines = buildPackage(template("conference"), { guests: 200, ...oneDay }, testCatalog, "SEK");
 
     expect(lines[0].title).toBe("Grand Hall");
     expect(capacityIssues(lines, 200)).toEqual([
@@ -130,13 +130,13 @@ describe("buildPackage", () => {
   });
 
   it("picks a bigger space as the group grows", () => {
-    const lines = buildPackage(template("offsite"), { guests: 60, ...twoDays }, testCatalog);
+    const lines = buildPackage(template("offsite"), { guests: 60, ...twoDays }, testCatalog, "SEK");
     expect(lines[0].title).toBe("Grand Hall");
   });
 
   it("leaves out items missing from the catalog", () => {
     const catalog = testCatalog.filter((item) => item.title !== "Microphone set");
-    const lines = buildPackage(template("wedding"), { guests: 90, ...oneDay }, catalog);
+    const lines = buildPackage(template("wedding"), { guests: 90, ...oneDay }, catalog, "SEK");
 
     expect(lines.map((entry) => entry.title)).toEqual([
       "Grand Hall",
@@ -148,7 +148,7 @@ describe("buildPackage", () => {
 
 describe("overrides", () => {
   const basics = { guests: 12, ...twoDays };
-  const lines = buildPackage(template("offsite"), basics, testCatalog);
+  const lines = buildPackage(template("offsite"), basics, testCatalog, "SEK");
   const dinner = idOf("Three-course dinner");
 
   it("applies an override and recalculates the line total", () => {
@@ -157,7 +157,7 @@ describe("overrides", () => {
     expect(overridden).toMatchObject({
       quantity: 10,
       derivedQuantity: 12,
-      lineTotalOre: 695_000,
+      lineTotal: 695_000,
       source: "overridden",
     });
   });
@@ -177,12 +177,12 @@ describe("overrides", () => {
   });
 
   it("allows zero, to leave an item out without removing it", () => {
-    expect(line(applyOverride(lines, dinner, 0), "Three-course dinner").lineTotalOre).toBe(0);
+    expect(line(applyOverride(lines, dinner, 0), "Three-course dinner").lineTotal).toBe(0);
   });
 
   it("keeps an override when the guest count changes, while the suggestion updates", () => {
     const previous = applyOverride(lines, dinner, 10);
-    const fresh = buildPackage(template("offsite"), { guests: 20, ...twoDays }, testCatalog);
+    const fresh = buildPackage(template("offsite"), { guests: 20, ...twoDays }, testCatalog, "SEK");
     const result = reapplyOverrides(fresh, previous);
 
     expect(line(result, "Three-course dinner")).toMatchObject({
@@ -196,7 +196,7 @@ describe("overrides", () => {
 
   it("drops an override for a meeting space that is swapped for a bigger one", () => {
     const previous = applyOverride(lines, idOf("Boardroom"), 1);
-    const fresh = buildPackage(template("offsite"), { guests: 30, ...twoDays }, testCatalog);
+    const fresh = buildPackage(template("offsite"), { guests: 30, ...twoDays }, testCatalog, "SEK");
     const result = reapplyOverrides(fresh, previous);
 
     expect(result[0]).toMatchObject({ title: "Harbour Room", quantity: 2, source: "derived" });
@@ -207,9 +207,9 @@ describe("overrides", () => {
 describe("summarize", () => {
   it("returns no per-person cost without guests", () => {
     expect(summarize([], { guests: 0 })).toEqual({
-      subtotalOre: 0,
-      perPersonOre: null,
-      budget: "none",
+      subtotal: 0,
+      perPerson: null,
+      budgetStatus: "none",
     });
   });
 });

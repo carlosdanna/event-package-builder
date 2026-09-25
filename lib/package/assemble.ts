@@ -1,6 +1,7 @@
 // The full package: the template's suggestion plus the salesperson's changes.
 // Used by the live summary in the browser and to recalculate totals on the server.
 import type { CatalogItem } from "@/lib/catalog/schema";
+import type { Currency } from "@/lib/money";
 import type { EventBasics } from "@/lib/schemas/event-basics";
 import type { Template } from "@/lib/templates/schema";
 import { buildPackage, toLine, type LineItem } from "./build";
@@ -21,9 +22,10 @@ export function assemblePackage(
   basics: EventBasics,
   catalog: CatalogItem[],
   choices: PackageChoices,
+  currency: Currency,
 ): LineItem[] {
-  const suggested = buildPackage(template, basics, catalog);
-  const added = addedLines(template, basics, catalog, choices.addedContentIds, suggested);
+  const suggested = buildPackage(template, basics, catalog, currency);
+  const added = addedLines(template, basics, catalog, choices.addedContentIds, suggested, currency);
   const kept = [...suggested, ...added].filter(
     (line) => !choices.removedContentIds.includes(line.contentId),
   );
@@ -42,6 +44,7 @@ function addedLines(
   catalog: CatalogItem[],
   addedContentIds: number[],
   suggested: LineItem[],
+  currency: Currency,
 ): LineItem[] {
   const present = new Set(suggested.map((line) => line.contentId));
   const lines: LineItem[] = [];
@@ -50,7 +53,7 @@ function addedLines(
     const item = catalog.find((entry) => entry.contentId === contentId);
     if (!item || present.has(contentId)) continue;
     present.add(contentId);
-    lines.push(toLine(item, basics, roomsCountFor(template, basics.guests)));
+    lines.push(toLine(item, basics, roomsCountFor(template, basics.guests), currency));
   }
   return lines;
 }

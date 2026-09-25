@@ -5,7 +5,7 @@ import { catalogMetadataSchema, type CatalogMetadata } from "./schema";
 const boardroom: CatalogMetadata = {
   category: "meeting_space",
   unit: "per_day",
-  priceOre: 600_000,
+  prices: { SEK: 600_000, EUR: 52_000, USD: 57_000, GBP: 45_000 },
   capacity: 12,
   description: "Private boardroom.",
 };
@@ -13,7 +13,7 @@ const boardroom: CatalogMetadata = {
 const coffee: CatalogMetadata = {
   category: "catering",
   unit: "per_person_per_day",
-  priceOre: 9_500,
+  prices: { SEK: 9_500, EUR: 850, USD: 900, GBP: 700 },
   description: "Coffee and a bun.",
 };
 
@@ -31,7 +31,7 @@ describe("mergeCatalog", () => {
         title: "Boardroom",
         category: "meeting_space",
         unit: "per_day",
-        priceOre: 600_000,
+        prices: { SEK: 600_000, EUR: 52_000, USD: 57_000, GBP: 45_000 },
         capacity: 12,
       },
     ]);

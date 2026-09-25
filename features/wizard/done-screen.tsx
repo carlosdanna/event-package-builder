@@ -5,7 +5,7 @@ import { CircleCheckIcon, ExternalLinkIcon, RotateCcwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { formatKronor } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import type { CreateProposalResponse } from "@/lib/schemas";
 
 type DoneScreenProps = {
@@ -29,7 +29,7 @@ export function DoneScreen({ proposal, onStartOver }: DoneScreenProps) {
           </Typography>
           <Typography size="sm" color="muted">{proposal.title}</Typography>
           <Typography size="lg" weight="semibold" className="tabular-nums">
-            {formatKronor(proposal.subtotalOre)}
+            {formatMoney(proposal.subtotal, proposal.currency)}
             <Typography as="span" size="sm" weight="normal" color="muted">
               {" "}
               excluding tax

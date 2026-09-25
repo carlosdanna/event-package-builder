@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { unitLabel } from "@/lib/catalog/labels";
-import { formatDateRange, formatKronor, plural } from "@/lib/format";
+import { formatDateRange, formatMoney, plural } from "@/lib/format";
+import { currencyNames, type Currency } from "@/lib/money";
 import {
   eventLength,
   type CapacityIssue,
@@ -28,7 +29,8 @@ import { cn } from "@/lib/utils";
 type ConfirmStepProps = {
   template: Template;
   basics: EventBasics;
-  budgetOre: number | null;
+  budget: number | null;
+  currency: Currency;
   lines: LineItem[];
   summary: PackageSummary;
   issues: CapacityIssue[];
@@ -40,7 +42,7 @@ type ConfirmStepProps = {
 
 // Read-only check of everything before the draft is created.
 export function ConfirmStep(props: ConfirmStepProps) {
-  const { template, basics, budgetOre, lines, summary, issues, customer } = props;
+  const { template, basics, budget, currency, lines, summary, issues, customer } = props;
   const { days } = eventLength(basics.startDate, basics.endDate);
   const isEmpty = !lines.some((line) => line.quantity > 0);
   const hasIssues = issues.length > 0;
@@ -53,7 +55,8 @@ export function ConfirmStep(props: ConfirmStepProps) {
             ["Template", template.name],
             ["Guests", String(basics.guests)],
             ["Dates", `${formatDateRange(basics.startDate, basics.endDate)}, ${plural(days, "day")}`],
-            ["Budget", budgetOre === null ? "Not set" : formatKronor(budgetOre)],
+            ["Currency", currencyNames[currency]],
+            ["Budget", budget === null ? "Not set" : formatMoney(budget, currency)],
           ]}
         />
       </ReviewSection>
@@ -73,7 +76,7 @@ export function ConfirmStep(props: ConfirmStepProps) {
         {lines.length === 0 ? (
           <Typography size="sm" color="muted">The package is empty.</Typography>
         ) : (
-          <PackageTable lines={lines} summary={summary} />
+          <PackageTable lines={lines} summary={summary} currency={currency} />
         )}
       </ReviewSection>
 
@@ -150,7 +153,9 @@ function Details({ rows }: { rows: [string, string][] }) {
 }
 
 // On phones, quantity and unit price move under the item name, so the table fits.
-function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageSummary }) {
+type PackageTableProps = { lines: LineItem[]; summary: PackageSummary; currency: Currency };
+
+function PackageTable({ lines, summary, currency }: PackageTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -172,18 +177,18 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
                 color="muted"
                 className="block tabular-nums sm:hidden"
               >
-                {line.quantity} × {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
+                {line.quantity} × {formatMoney(line.unitPrice, currency)} {unitLabel(line.unit)}
               </Typography>
             </TableCell>
             <TableCell className="text-right tabular-nums max-sm:hidden">{line.quantity}</TableCell>
             <TableCell className="text-right whitespace-normal tabular-nums max-sm:hidden">
-              {formatKronor(line.unitPriceOre)}
+              {formatMoney(line.unitPrice, currency)}
               <Typography as="span" size="xs" color="muted" className="block">
                 {unitLabel(line.unit)}
               </Typography>
             </TableCell>
             <TableCell className="text-right tabular-nums">
-              {formatKronor(line.lineTotalOre)}
+              {formatMoney(line.lineTotal, currency)}
             </TableCell>
           </TableRow>
         ))}
@@ -192,14 +197,14 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
         <TableRow>
           <FooterLabel>Subtotal, excluding tax</FooterLabel>
           <TableCell className="text-right font-semibold tabular-nums">
-            {formatKronor(summary.subtotalOre)}
+            {formatMoney(summary.subtotal, currency)}
           </TableCell>
         </TableRow>
-        {summary.perPersonOre !== null && (
+        {summary.perPerson !== null && (
           <TableRow>
             <FooterLabel className="font-normal text-muted-foreground">Per person</FooterLabel>
             <TableCell className="text-right font-normal text-muted-foreground tabular-nums">
-              {formatKronor(summary.perPersonOre)}
+              {formatMoney(summary.perPerson, currency)}
             </TableCell>
           </TableRow>
         )}

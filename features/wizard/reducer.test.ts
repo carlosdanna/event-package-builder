@@ -180,4 +180,18 @@ describe("wizardReducer customer details", () => {
     const state = run(...toCustomerStep, ...validCustomer, { type: "reset" });
     expect(state).toEqual(initialWizardState);
   });
+
+  it("starts in Swedish kronor and goes back to them on reset", () => {
+    expect(initialWizardState.currency).toBe("SEK");
+    const state = run({ type: "setCurrency", currency: "EUR" }, { type: "reset" });
+    expect(state.currency).toBe("SEK");
+  });
+});
+
+describe("setCurrency", () => {
+  it("changes the currency and keeps every other choice", () => {
+    const before = run(...toPackageStep, { type: "addItem", contentId: 7 });
+    const after = wizardReducer(before, { type: "setCurrency", currency: "GBP" });
+    expect(after).toEqual({ ...before, currency: "GBP" });
+  });
 });

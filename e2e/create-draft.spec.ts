@@ -3,7 +3,7 @@
 import { addDays, format } from "date-fns";
 import { expect, test, type Page } from "next/experimental/testmode/playwright";
 import { catalogMetadata, mergeCatalog } from "@/lib/catalog";
-import { formatDateRange, formatKronor } from "@/lib/format";
+import { formatDateRange, formatMoney } from "@/lib/format";
 import { assemblePackage, summarize } from "@/lib/package";
 import { getTemplate } from "@/lib/templates";
 
@@ -51,17 +51,22 @@ test("creates a conference draft with one changed quantity", async ({ page, next
   const catalog = mergeCatalog(contents, catalogMetadata).items;
   const coffeeBreak = catalog.find((item) => item.title === "Coffee break")!;
   const basics = { guests: 45, startDate, endDate };
-  const lines = assemblePackage(getTemplate("conference")!, basics, catalog, {
+  // The draft is priced in euros, from the catalog's euro price list.
+  const choices = {
     addedContentIds: [],
     removedContentIds: [],
     overrides: { [coffeeBreak.contentId]: 45 },
-  });
-  const expectedTotal = formatKronor(summarize(lines, basics).subtotalOre);
+  };
+  const lines = assemblePackage(getTemplate("conference")!, basics, catalog, choices, "EUR");
+  const expectedTotal = formatMoney(summarize(lines, basics).subtotal, "EUR");
   const expectedTitle = `Full-day conference for Acme AB, ${formatDateRange(startDate, endDate)}`;
 
   await signIn(page);
 
-  // Template
+  // Currency and template
+  await page.getByRole("combobox", { name: "Currency" }).click();
+  await page.getByRole("option", { name: "Euros" }).click();
+  await expect(page.getByRole("combobox", { name: "Currency" })).toHaveText("Euros");
   await page.getByRole("radio", { name: /Full-day conference/ }).check();
   await goNext(page);
 
@@ -89,9 +94,10 @@ test("creates a conference draft with one changed quantity", async ({ page, next
 
   // Confirm
   const coffeeRow = page.getByRole("row", { name: /Coffee break/ });
-  // 45 coffee breaks at 95 kronor, whichever way the table is laid out.
-  await expect(coffeeRow).toContainText(`45 × ${formatKronor(coffeeBreak.priceOre)}`);
-  await expect(coffeeRow).toContainText(formatKronor(45 * coffeeBreak.priceOre));
+  // 45 coffee breaks at 8.50 euros, whichever way the table is laid out.
+  const coffeePrice = coffeeBreak.prices.EUR;
+  await expect(coffeeRow).toContainText(`45 × ${formatMoney(coffeePrice, "EUR")}`);
+  await expect(coffeeRow).toContainText(formatMoney(45 * coffeePrice, "EUR"));
   await page.getByRole("button", { name: "Create draft proposal" }).click();
 
   // Done
@@ -115,8 +121,13 @@ test("creates a conference draft with one changed quantity", async ({ page, next
     company_id: number;
     title_md: string;
     recipient: Record<string, string>;
-    blocks: { content_id: number; quantity: number; unit_value_without_discount_without_tax: number }[];
-    data: { subtotal_ore: number; guests: number };
+    blocks: {
+      content_id: number;
+      currency: string;
+      quantity: number;
+      unit_value_without_discount_without_tax: number;
+    }[];
+    data: { subtotal: number; guests: number; currency: string };
   };
   expect(sent.company_id).toBe(COMPANY_ID);
   expect(sent.title_md).toBe(expectedTitle);
@@ -130,14 +141,19 @@ test("creates a conference draft with one changed quantity", async ({ page, next
     lines.map((line) =>
       expect.objectContaining({
         content_id: line.contentId,
+        currency: "EUR",
         quantity: line.quantity,
-        unit_value_without_discount_without_tax: line.unitPriceOre,
+        unit_value_without_discount_without_tax: line.unitPrice,
       }),
     ),
   );
   expect(sent.blocks.find((block) => block.content_id === coffeeBreak.contentId)?.quantity).toBe(45);
   expect(sent.blocks.every((block) => block.quantity > 0)).toBe(true);
-  expect(sent.data).toMatchObject({ guests: 45, subtotal_ore: summarize(lines, basics).subtotalOre });
+  expect(sent.data).toMatchObject({
+    guests: 45,
+    currency: "EUR",
+    subtotal: summarize(lines, basics).subtotal,
+  });
 });
 
 async function signIn(page: Page) {

@@ -2,7 +2,7 @@
 
 ## What it does
 
-A hotel salesperson picks an event template, enters the guest count and dates, and adjusts a suggested package while a live total updates beside it. After adding the customer's details and confirming, one click creates a draft proposal in Proposales with every line priced.
+A hotel salesperson picks the currency and an event template, enters the guest count and dates, and adjusts a suggested package while a live total updates beside it. After adding the customer's details and confirming, one click creates a draft proposal in Proposales with every line priced.
 
 ![Screenshot of the wizard](docs/screenshot.png)
 
@@ -39,7 +39,7 @@ pnpm dev                     # http://localhost:3000
 
 ## How pricing works
 
-Every catalog item has a price in öre (hundredths of a krona, stored as whole numbers) and one of five pricing units. The unit decides the suggested quantity:
+Every catalog item has one of five pricing units and a price in each supported currency: Swedish kronor, euros, US dollars and British pounds. Prices are whole numbers in the smallest unit of their currency (öre, cents or pence). The unit decides the suggested quantity:
 
 | Unit | Quantity | Example: 45 guests, 2 days |
 | --- | --- | --- |
@@ -56,7 +56,11 @@ The template sets the number of rooms. For example, the wedding books one room p
 
 The line total is the unit price times the quantity, and the subtotal is the sum of the lines. The salesperson can change any quantity. The line is then marked "Custom" and can be reset to the suggestion.
 
-The full-day conference for 45 guests over 2 days comes to 69,000 kronor. The Harbour Room seats 50 and is the smallest room that fits. That makes 36,000 kronor for the room, 8,550 for coffee breaks, 22,050 for lunch and 2,400 for the projector. Prices exclude tax. The interface shows whole kronor.
+The full-day conference for 45 guests over 2 days comes to 69,000 kronor. The Harbour Room seats 50 and is the smallest room that fits. That makes 36,000 kronor for the room, 8,550 for coffee breaks, 22,050 for lunch and 2,400 for the projector. Prices exclude tax. Amounts show two decimals only when they have any.
+
+### Currencies
+
+The salesperson picks the currency on the first step; Swedish kronor is the default. There are no exchange rates: each item has its own list price per currency in `lib/catalog/metadata.ts`, the way a hotel keeps a price list for foreign guests. The same conference in euros comes to 5,985 euros. Changing the currency keeps every other choice, and the draft, its product blocks and its stored subtotal are all in the chosen currency. Adding a currency means adding its code and a price for every item; the catalog schema refuses an item that misses one.
 
 ### Physical limits
 
@@ -84,11 +88,11 @@ The browser makes three requests: the catalog, recent drafts, and creating a dra
 
 ### What Proposales could and couldn't store
 
-Proposales content stores a title and a description per language. That is enough for the seed script to create the hotel's catalog, and each description ends with a readable price line.
+Proposales content stores a title and a description per language. That is enough for the seed script to create the hotel's catalog, and each description ends with a readable price line in Swedish kronor.
 
-Content cannot store a category, a pricing unit, a price or a seating capacity. Those live in `lib/catalog/metadata.ts`, keyed by the English title, and the server merges them with the live content. A content item without metadata is left out with a warning in the server log, and metadata without content asks you to run the seed.
+Content cannot store a category, a pricing unit, prices or a seating capacity. Those live in `lib/catalog/metadata.ts`, keyed by the English title, and the server merges them with the live content. A content item without metadata is left out with a warning in the server log, and metadata without content asks you to run the seed.
 
-A proposal stores product blocks with a quantity and a unit price, so the draft carries every priced line. It also stores free-form data, which this app uses for the source, template, guests, dates, subtotal and internal notes. The source value is how "Recent drafts" finds the drafts this app created. Proposales has no notion of pricing rules such as "per person per day", so the quantity calculation stays in this app and the draft receives the result.
+A proposal stores product blocks with a quantity and a unit price, so the draft carries every priced line. It also stores free-form data, which this app uses for the source, template, guests, dates, currency, subtotal and internal notes. The source value is how "Recent drafts" finds the drafts this app created. Proposales has no notion of pricing rules such as "per person per day", so the quantity calculation stays in this app and the draft receives the result.
 
 ## What I would do next with more time
 

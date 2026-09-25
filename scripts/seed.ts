@@ -22,7 +22,8 @@ import {
   unitLabel,
   type CatalogMetadata,
 } from "@/lib/catalog";
-import { formatKronor } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import { DEFAULT_CURRENCY } from "@/lib/money";
 
 type Outcome = "created" | "restored" | "updated" | "skipped" | "archived" | "failed";
 type Row = { title: string; outcome: Outcome; note?: string };
@@ -35,7 +36,8 @@ const retiredTitles = [
 ];
 
 function describe(entry: CatalogMetadata) {
-  const price = `${formatKronor(entry.priceOre)} ${unitLabel(entry.unit)}, excluding tax.`;
+  // Content text has one language and no currency, so it shows the default price list.
+  const price = `${formatMoney(entry.prices[DEFAULT_CURRENCY], DEFAULT_CURRENCY)} ${unitLabel(entry.unit)}, excluding tax.`;
   return `${entry.description}\n\nPrice: ${price}`;
 }
 

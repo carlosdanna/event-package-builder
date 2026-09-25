@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { assemblePackage, summarize } from "@/lib/package";
 import { idOf, testCatalog } from "@/lib/package/test-catalog";
+import type { Currency } from "@/lib/money";
 import type { CustomerDetails } from "@/lib/schemas/customer";
 import { getTemplate, type Template } from "@/lib/templates";
 
@@ -18,12 +19,14 @@ const customer: CustomerDetails = {
 };
 const noChanges = { addedContentIds: [], removedContentIds: [], overrides: {} };
 
-function build(overrides: Partial<typeof noChanges> = {}, details = customer) {
-  const lines = assemblePackage(conference, basics, testCatalog, { ...noChanges, ...overrides });
+function build(overrides: Partial<typeof noChanges> = {}, details = customer, currency: Currency = "SEK") {
+  const choices = { ...noChanges, ...overrides };
+  const lines = assemblePackage(conference, basics, testCatalog, choices, currency);
   return buildCreateProposalInput({
     companyId: 7,
     template: conference,
     basics,
+    currency,
     lines,
     summary: summarize(lines, basics),
     customer: details,
@@ -40,6 +43,18 @@ describe("buildCreateProposalInput", () => {
       block("Conference lunch", 90, 24_500),
       block("Projector and screen", 2, 120_000),
     ]);
+  });
+
+  it("sends every block and the stored subtotal in the chosen currency", () => {
+    const input = build({}, customer, "GBP");
+
+    expect(input.blocks).toEqual([
+      block("Harbour Room", 2, 135_000, "GBP"),
+      block("Coffee break", 90, 700, "GBP"),
+      block("Conference lunch", 90, 1_800, "GBP"),
+      block("Projector and screen", 2, 8_900, "GBP"),
+    ]);
+    expect(input.data).toMatchObject({ currency: "GBP", subtotal: 2 * 135_000 + 90 * 700 + 90 * 1_800 + 2 * 8_900 });
   });
 
   it("titles the proposal and addresses the customer", () => {
@@ -69,7 +84,8 @@ describe("buildCreateProposalInput", () => {
       guests: 45,
       start_date: "2026-10-14",
       end_date: "2026-10-15",
-      subtotal_ore: 6_900_000,
+      currency: "SEK",
+      subtotal: 6_900_000,
     });
   });
 
@@ -89,7 +105,7 @@ describe("buildCreateProposalInput", () => {
       ["Conference lunch", 50],
       ["Projector and screen", 2],
     ]);
-    expect(input.data?.subtotal_ore).toBe(3_600_000 + 50 * 24_500 + 240_000);
+    expect(input.data?.subtotal).toBe(3_600_000 + 50 * 24_500 + 240_000);
   });
 
   it("produces a request that passes the Create Proposal schema", () => {
@@ -107,13 +123,13 @@ describe("splitName", () => {
   });
 });
 
-function block(title: string, quantity: number, unitOre: number) {
+function block(title: string, quantity: number, unitPrice: number, currency: Currency = "SEK") {
   return {
     type: "product-block",
     content_id: idOf(title),
     title,
-    currency: "SEK",
+    currency,
     quantity,
-    unit_value_without_discount_without_tax: unitOre,
+    unit_value_without_discount_without_tax: unitPrice,
   };
 }

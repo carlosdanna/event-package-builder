@@ -1,5 +1,6 @@
 // Wizard state: the salesperson's choices, never the priced lines.
 // Lines are derived from these choices with assemblePackage, so they cannot go stale.
+import { DEFAULT_CURRENCY, type Currency } from "@/lib/money";
 import {
   customerDetailsDraftSchema,
   emptyCustomerDetailsDraft,
@@ -27,6 +28,7 @@ export type WizardState = {
   step: number;
   furthestStep: number;
   templateId: TemplateId | null;
+  currency: Currency;
   basics: EventBasicsDraft;
   showBasicsErrors: boolean;
   customer: CustomerDetailsDraft;
@@ -38,6 +40,7 @@ export type WizardState = {
 
 export type WizardAction =
   | { type: "selectTemplate"; templateId: TemplateId }
+  | { type: "setCurrency"; currency: Currency }
   | { type: "setBasicsField"; field: keyof EventBasicsDraft; value: string }
   | { type: "setCustomerField"; field: keyof CustomerDetailsDraft; value: string }
   | { type: "setQuantity"; contentId: number; quantity: number; derivedQuantity: number }
@@ -53,6 +56,7 @@ export const initialWizardState: WizardState = {
   step: 0,
   furthestStep: 0,
   templateId: null,
+  currency: DEFAULT_CURRENCY,
   basics: emptyEventBasicsDraft,
   showBasicsErrors: false,
   customer: emptyCustomerDetailsDraft,
@@ -66,6 +70,9 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
   switch (action.type) {
     case "selectTemplate":
       return selectTemplate(state, action.templateId);
+    case "setCurrency":
+      // Prices come from the price list of the currency, so every other choice still holds.
+      return { ...state, currency: action.currency };
     case "setBasicsField":
       return { ...state, basics: { ...state.basics, [action.field]: action.value } };
     case "setCustomerField":

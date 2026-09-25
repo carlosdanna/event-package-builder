@@ -45,7 +45,7 @@ describe("maxQuantityFor", () => {
 describe("suggested quantities", () => {
   it("books every room the hotel has when the guests need more, and reports the rest", () => {
     const basics = { guests: 60, startDate: "2026-11-02", endDate: "2026-11-03" };
-    const rooms = line(buildPackage(template("offsite"), basics, testCatalog), "Standard double");
+    const rooms = line(buildPackage(template("offsite"), basics, testCatalog, "SEK"), "Standard double");
 
     expect(rooms).toMatchObject({ neededQuantity: 60, maxQuantity: 40, quantity: 40 });
     expect(shortfall(rooms)).toBe(20);
@@ -53,7 +53,7 @@ describe("suggested quantities", () => {
 
   it("never limits catering", () => {
     const basics = { guests: 500, startDate: "2026-10-14", endDate: "2026-10-16" };
-    const coffee = line(buildPackage(template("conference"), basics, testCatalog), "Coffee break");
+    const coffee = line(buildPackage(template("conference"), basics, testCatalog, "SEK"), "Coffee break");
 
     expect(coffee).toMatchObject({ quantity: 1_500, maxQuantity: null });
     expect(shortfall(coffee)).toBe(0);
@@ -64,7 +64,7 @@ describe("suggested quantities", () => {
     const lines = assemblePackage(template("conference"), basics, testCatalog, {
       ...noChoices,
       addedContentIds: [idOf("Suite")],
-    });
+    }, "SEK");
 
     expect(line(lines, "Suite")).toMatchObject({ neededQuantity: 50, quantity: 4 });
   });
@@ -75,7 +75,7 @@ describe("limitIssues", () => {
     const lines = assemblePackage(template("wedding"), { ...oneDay, guests: 90 }, testCatalog, {
       ...noChoices,
       overrides: { [idOf("Grand Hall")]: 2 },
-    });
+    }, "SEK");
 
     expect(limitIssues(lines)).toEqual([
       {
@@ -88,7 +88,7 @@ describe("limitIssues", () => {
 
   it("does not flag a capped suggestion, since it books only what exists", () => {
     const basics = { guests: 60, startDate: "2026-11-02", endDate: "2026-11-03" };
-    const lines = buildPackage(template("offsite"), basics, testCatalog);
+    const lines = buildPackage(template("offsite"), basics, testCatalog, "SEK");
 
     expect(limitIssues(lines)).toEqual([]);
   });
@@ -100,7 +100,7 @@ describe("packageIssues", () => {
       ...noChoices,
       addedContentIds: [idOf("Microphone set")],
       overrides: { [idOf("Microphone set")]: 3 },
-    });
+    }, "SEK");
 
     expect(packageIssues(lines, 80).map((issue) => issue.title)).toEqual([
       "Boardroom",

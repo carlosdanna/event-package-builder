@@ -17,6 +17,7 @@ const createProposalMock = vi.mocked(createProposal);
 const request = {
   templateId: "conference",
   basics: { guests: 45, startDate: "2026-10-14", endDate: "2026-10-15" },
+  currency: "SEK",
   addedContentIds: [],
   removedContentIds: [],
   overrides: {},
@@ -47,19 +48,37 @@ describe("POST /api/proposals", () => {
       uuid: "abc",
       url: "https://app.proposales.com/abc",
       title: "Full-day conference for Acme AB, 14–15 Oct 2026",
-      subtotalOre: 6_900_000,
+      subtotal: 6_900_000,
+      currency: "SEK",
     });
-    expect(createProposalMock.mock.calls[0][0].data?.subtotal_ore).toBe(6_900_000);
+    expect(createProposalMock.mock.calls[0][0].data?.subtotal).toBe(6_900_000);
+  });
+
+  it("prices the draft from the price list of the chosen currency", async () => {
+    const response = await post({ ...request, currency: "EUR" });
+
+    // Harbour Room 2 × 1,560, coffee 90 × 8.50, lunch 90 × 21, projector 2 × 105 euros.
+    expect(await response.json()).toMatchObject({ subtotal: 598_500, currency: "EUR" });
+    const input = createProposalMock.mock.calls[0][0];
+    expect(input.data).toMatchObject({ currency: "EUR", subtotal: 598_500 });
+    expect(input.blocks?.every((block) => block.currency === "EUR")).toBe(true);
+  });
+
+  it("refuses a currency without a price list", async () => {
+    const response = await post({ ...request, currency: "JPY" });
+
+    expect(response.status).toBe(400);
+    expect(createProposalMock).not.toHaveBeenCalled();
   });
 
   it("applies overrides to the recalculated total", async () => {
     const response = await post({ ...request, overrides: { [idOf("Coffee break")]: 45 } });
 
-    expect((await response.json()).subtotalOre).toBe(6_900_000 - 45 * 9_500);
+    expect((await response.json()).subtotal).toBe(6_900_000 - 45 * 9_500);
   });
 
   it("refuses totals or prices sent from the browser, without calling Proposales", async () => {
-    const response = await post({ ...request, subtotalOre: 100 });
+    const response = await post({ ...request, subtotal: 100 });
 
     expect(response.status).toBe(400);
     expect(createProposalMock).not.toHaveBeenCalled();

@@ -8,7 +8,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Typography } from "@/components/ui/typography";
-import { plural } from "@/lib/format";
+import { currencyInText, plural } from "@/lib/format";
+import type { Currency } from "@/lib/money";
 import { eventLength } from "@/lib/package";
 import {
   MAX_EVENT_DAYS,
@@ -26,16 +27,17 @@ export const basicsFieldIds: Record<FieldName, string> = {
   guests: "guests",
   startDate: "start-date",
   endDate: "end-date",
-  budgetKronor: "budget",
+  budget: "budget",
 };
 
 type BasicsStepProps = {
   draft: EventBasicsDraft;
+  currency: Currency;
   showAllErrors: boolean;
   onChange: (field: FieldName, value: string) => void;
 };
 
-export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) {
+export function BasicsStep({ draft, currency, showAllErrors, onChange }: BasicsStepProps) {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
   const errors = fieldErrors<FieldName>(eventBasicsDraftSchema, draft);
   const errorFor = (field: FieldName) => (showAllErrors || touched[field] ? errors[field] : undefined);
@@ -104,21 +106,21 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
       </div>
 
       <Field
-        id={basicsFieldIds.budgetKronor}
-        label="Budget in kronor (optional)"
+        id={basicsFieldIds.budget}
+        label={`Budget in ${currencyInText(currency)} (optional)`}
         hint="Excluding tax. The summary shows how much of it the package uses."
-        error={errorFor("budgetKronor")}
+        error={errorFor("budget")}
       >
         {(describedBy) => (
           <Input
-            id={basicsFieldIds.budgetKronor}
+            id={basicsFieldIds.budget}
             inputMode="numeric"
             placeholder="For example 120,000"
             className="max-w-56"
-            value={draft.budgetKronor}
-            onChange={(event) => onChange("budgetKronor", event.target.value)}
-            onBlur={() => touch("budgetKronor")}
-            aria-invalid={Boolean(errorFor("budgetKronor"))}
+            value={draft.budget}
+            onChange={(event) => onChange("budget", event.target.value)}
+            onBlur={() => touch("budget")}
+            aria-invalid={Boolean(errorFor("budget"))}
             aria-describedby={describedBy}
           />
         )}

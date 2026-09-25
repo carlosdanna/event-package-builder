@@ -86,7 +86,7 @@ const recipientSchema = z.object({
   company_name: z.string().optional(),
 });
 
-// Prices are in öre, the smallest unit of Swedish kronor.
+// Prices are in the smallest unit of the block's currency, such as öre or cents.
 const productBlockSchema = z.object({
   type: z.literal("product-block"),
   content_id: z.number().int().positive(), // the content variation identifier

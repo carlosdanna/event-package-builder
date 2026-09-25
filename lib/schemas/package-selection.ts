@@ -1,8 +1,9 @@
 // What the salesperson chose in the wizard. The server rebuilds the package
 // from this, so totals never come from the browser.
 import { z } from "zod";
+import { currencySchema } from "@/lib/money";
 import { templateIdSchema } from "@/lib/templates/schema";
-import { budgetOreSchema, eventBasicsSchema } from "./event-basics";
+import { budgetSchema, eventBasicsSchema } from "./event-basics";
 
 // Well above any real event, and small enough that totals stay exact whole numbers.
 export const MAX_QUANTITY = 10_000;
@@ -15,7 +16,8 @@ const contentIdsSchema = z.array(contentIdSchema).max(MAX_CHANGED_ITEMS);
 export const packageSelectionSchema = z.object({
   templateId: templateIdSchema,
   basics: eventBasicsSchema,
-  budgetOre: budgetOreSchema,
+  currency: currencySchema,
+  budget: budgetSchema,
   addedContentIds: contentIdsSchema,
   removedContentIds: contentIdsSchema,
   overrides: z

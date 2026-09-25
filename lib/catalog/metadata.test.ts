@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { currencySchema } from "@/lib/money";
 import { catalogMetadata } from "./metadata";
 
 describe("catalogMetadata", () => {
   it("holds the thirteen catalog items with their prices in öre", () => {
     const prices = Object.fromEntries(
-      Object.entries(catalogMetadata).map(([title, entry]) => [title, entry.priceOre]),
+      Object.entries(catalogMetadata).map(([title, entry]) => [title, entry.prices.SEK]),
     );
 
     expect(prices).toEqual({
@@ -22,6 +23,19 @@ describe("catalogMetadata", () => {
       "Projector and screen": 120_000,
       "Microphone set": 150_000,
     });
+  });
+
+  it("prices every item in every currency, with its own list price", () => {
+    for (const entry of Object.values(catalogMetadata)) {
+      expect(Object.keys(entry.prices).sort()).toEqual([...currencySchema.options].sort());
+    }
+    expect(catalogMetadata.Boardroom.prices).toEqual({
+      SEK: 600_000,
+      EUR: 52_000,
+      USD: 57_000,
+      GBP: 45_000,
+    });
+    expect(catalogMetadata["Coffee break"].prices.EUR).toBe(850);
   });
 
   it("gives a capacity to every meeting space and to nothing else", () => {

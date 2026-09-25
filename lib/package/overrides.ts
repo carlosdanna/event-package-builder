@@ -33,5 +33,5 @@ export function reapplyOverrides(freshLines: LineItem[], previousLines: LineItem
 }
 
 function withQuantity(line: LineItem, quantity: number, source: LineItem["source"]): LineItem {
-  return { ...line, quantity, lineTotalOre: line.unitPriceOre * quantity, source };
+  return { ...line, quantity, lineTotal: line.unitPrice * quantity, source };
 }

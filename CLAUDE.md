@@ -28,7 +28,9 @@ and creates a draft proposal in Proposales with one click.
 - All pricing and quantity logic lives in lib/package as pure functions,
   shared by the browser (live summary) and the server (recalculated before
   creating the draft). Never trust totals sent from the browser.
-- Prices are integers in öre. Format as kronor only in the interface.
+- Prices are integers in the smallest unit of their currency (öre, cents, pence).
+  Each catalog item has its own price per currency in lib/catalog/metadata.ts;
+  there are no exchange rates. Format with formatMoney only in the interface.
 - Meeting spaces, rooms and equipment have a physical limit (`available` in
   lib/catalog/metadata.ts); catering has none. A package over a limit, or with
   a space too small for the guests, cannot be created (checked in the browser
@@ -65,5 +67,7 @@ Each defines event type, default items by content title, and a rooms rule.
 
 ## Style
 - Small, readable functions. No clever abstractions.
+- Text styles go through Typography (components/ui/typography.tsx): pick the
+  tag with `as`, adjust with size, weight and color, and use className for the rest.
 - Avoid acronyms in user-facing text and in comments.
 - Tests with Vitest. No live outside calls in tests.

@@ -1,9 +1,33 @@
-// Money formatting for the interface. Prices are stored as whole öre.
-const kronorFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+// Formatting for the interface.
+import type { Currency } from "./money";
 
-// 1240000 öre becomes "12,400 kronor".
-export function formatKronor(ore: number) {
-  return `${kronorFormat.format(Math.round(ore / 100))} kronor`;
+const moneyFormats = new Map<Currency, Intl.NumberFormat>();
+
+// Amounts are in the smallest currency unit: 1240000 in "SEK" becomes
+// "12,400 Swedish kronor" and 104050 in "EUR" becomes "1,040.50 euros".
+export function formatMoney(amount: number, currency: Currency) {
+  return moneyFormat(currency).format(amount / 100);
+}
+
+// The currency as it reads in a sentence: "Swedish kronor", "euros".
+export function currencyInText(currency: Currency) {
+  const parts = moneyFormat(currency).formatToParts(2);
+  return parts.find((part) => part.type === "currency")?.value ?? currency;
+}
+
+function moneyFormat(currency: Currency) {
+  let format = moneyFormats.get(currency);
+  if (!format) {
+    format = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      currencyDisplay: "name",
+      minimumFractionDigits: 2,
+      trailingZeroDisplay: "stripIfInteger",
+    });
+    moneyFormats.set(currency, format);
+  }
+  return format;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

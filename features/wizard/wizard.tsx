@@ -65,6 +65,7 @@ export function Wizard() {
     const request = {
       templateId: state.templateId,
       basics: priced.basics,
+      currency: state.currency,
       addedContentIds: state.addedContentIds,
       removedContentIds: state.removedContentIds,
       overrides: state.overrides,
@@ -94,7 +95,8 @@ export function Wizard() {
   const summaryProps: SummaryProps = {
     lines: priced?.lines ?? [],
     summary: priced?.summary ?? null,
-    budgetOre: priced?.budgetOre ?? null,
+    budget: priced?.budget ?? null,
+    currency: state.currency,
   };
 
   return (
@@ -164,24 +166,24 @@ type PricedPackage = NonNullable<ReturnType<typeof usePricedPackage>>;
 // Derives the priced lines from the wizard choices. Null until there is a
 // catalog, a template and valid guests and dates.
 function usePricedPackage(state: WizardState, catalog: CatalogItem[] | undefined) {
-  const { templateId, basics: draft, addedContentIds, removedContentIds, overrides } = state;
+  const { templateId, currency, basics: draft, addedContentIds, removedContentIds, overrides } = state;
 
   return useMemo(() => {
     const template = templateId ? getTemplate(templateId) : null;
     const parsed = eventBasicsDraftSchema.safeParse(draft);
     if (!catalog || !template || !parsed.success) return null;
 
-    const { basics, budgetOre } = parsed.data;
+    const { basics, budget } = parsed.data;
     const choices = { addedContentIds, removedContentIds, overrides };
-    const lines = assemblePackage(template, basics, catalog, choices);
+    const lines = assemblePackage(template, basics, catalog, choices, currency);
     return {
       basics,
-      budgetOre,
+      budget,
       lines,
-      summary: summarize(lines, basics, budgetOre),
+      summary: summarize(lines, basics, budget),
       issues: packageIssues(lines, basics.guests),
     };
-  }, [catalog, templateId, draft, addedContentIds, removedContentIds, overrides]);
+  }, [catalog, templateId, currency, draft, addedContentIds, removedContentIds, overrides]);
 }
 
 // Moves focus to the step heading when the step changes, but not on first load,
@@ -216,7 +218,9 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
           <TemplateStep
             catalog={catalog}
             selected={state.templateId}
+            currency={state.currency}
             onSelect={(templateId) => dispatch({ type: "selectTemplate", templateId })}
+            onCurrencyChange={(currency) => dispatch({ type: "setCurrency", currency })}
           />
           <RecentDrafts />
         </>
@@ -225,6 +229,7 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
       return (
         <BasicsStep
           draft={state.basics}
+          currency={state.currency}
           showAllErrors={state.showBasicsErrors}
           onChange={(field, value) => dispatch({ type: "setBasicsField", field, value })}
         />
@@ -237,6 +242,7 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
           lines={priced.lines}
           catalog={catalog}
           guests={priced.basics.guests}
+          currency={state.currency}
           issues={priced.issues}
           onQuantityChange={(line, quantity) =>
             dispatch({
@@ -268,7 +274,8 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
         <ConfirmStep
           template={template}
           basics={priced.basics}
-          budgetOre={priced.budgetOre}
+          budget={priced.budget}
+          currency={state.currency}
           lines={priced.lines}
           summary={priced.summary}
           issues={priced.issues}
