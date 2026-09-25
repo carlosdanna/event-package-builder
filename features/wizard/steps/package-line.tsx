@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
 import type { LineItem } from "@/lib/package";
+import { MAX_QUANTITY } from "@/lib/schemas/package-selection";
+import { isAllowedQuantity } from "../reducer";
 
 type PackageLineProps = {
   line: LineItem;
@@ -111,13 +113,14 @@ function QuantityInput({ id, label, quantity, onChange }: QuantityInputProps) {
       type="number"
       inputMode="numeric"
       min={0}
+      max={MAX_QUANTITY}
       step={1}
       className="w-20 text-right tabular-nums"
       value={text}
       onChange={(event) => {
         setText(event.target.value);
         const next = Number(event.target.value);
-        if (event.target.value !== "" && Number.isInteger(next) && next >= 0) {
+        if (event.target.value !== "" && isAllowedQuantity(next)) {
           setShownQuantity(next);
           onChange(next);
         }

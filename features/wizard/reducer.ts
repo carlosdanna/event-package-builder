@@ -10,6 +10,7 @@ import {
   eventBasicsDraftSchema,
   type EventBasicsDraft,
 } from "@/lib/schemas/event-basics";
+import { MAX_QUANTITY } from "@/lib/schemas/package-selection";
 import type { TemplateId } from "@/lib/templates/schema";
 
 export const STEPS = [
@@ -120,12 +121,16 @@ function setQuantity(
   quantity: number,
   derivedQuantity: number,
 ): WizardState {
-  if (!Number.isInteger(quantity) || quantity < 0) return state;
+  if (!isAllowedQuantity(quantity)) return state;
   const overrides =
     quantity === derivedQuantity
       ? without(state.overrides, contentId)
       : { ...state.overrides, [contentId]: quantity };
   return { ...state, overrides };
+}
+
+export function isAllowedQuantity(quantity: number) {
+  return Number.isInteger(quantity) && quantity >= 0 && quantity <= MAX_QUANTITY;
 }
 
 function addItem(state: WizardState, contentId: number): WizardState {

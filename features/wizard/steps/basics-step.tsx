@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, max, startOfToday } from "date-fns";
+import { addDays, format, max, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { eventLength } from "@/lib/package";
 import {
+  MAX_EVENT_DAYS,
   MAX_GUESTS,
   eventBasicsDraftSchema,
   type EventBasicsDraft,
@@ -64,7 +65,9 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
                   onChange("startDate", value);
                   touch("startDate");
                   // Keep the range valid: a single-day event is the natural default.
-                  if (!draft.endDate || draft.endDate < value) onChange("endDate", value);
+                  if (!draft.endDate || draft.endDate < value || draft.endDate > lastEndDate(value)) {
+                    onChange("endDate", value);
+                  }
                 }}
               />
             )}
@@ -75,6 +78,7 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
                 id="end-date"
                 value={draft.endDate}
                 earliest={draft.startDate}
+                latest={draft.startDate ? lastEndDate(draft.startDate) : undefined}
                 describedBy={describedBy}
                 invalid={Boolean(errorFor("endDate"))}
                 onChange={(value) => {
@@ -116,12 +120,13 @@ type DatePickerProps = {
   id: string;
   value: string;
   earliest?: string;
+  latest?: string;
   describedBy?: string;
   invalid: boolean;
   onChange: (value: string) => void;
 };
 
-function DatePicker({ id, value, earliest, describedBy, invalid, onChange }: DatePickerProps) {
+function DatePicker({ id, value, earliest, latest, describedBy, invalid, onChange }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = value ? fromIsoDate(value) : undefined;
   // Events cannot start in the past; the end date cannot be before the start.
@@ -151,7 +156,9 @@ function DatePicker({ id, value, earliest, describedBy, invalid, onChange }: Dat
           mode="single"
           selected={selected}
           defaultMonth={selected ?? earliestDate}
-          disabled={{ before: earliestDate }}
+          disabled={
+            latest ? [{ before: earliestDate }, { after: fromIsoDate(latest) }] : { before: earliestDate }
+          }
           onSelect={(date) => {
             if (!date) return;
             onChange(toIsoDate(date));
@@ -172,6 +179,11 @@ function EventLengthNote({ startDate, endDate }: { startDate: string; endDate: s
       {plural(days, "day")}, {plural(nights, "night")}
     </p>
   );
+}
+
+// The last end date that keeps the event within MAX_EVENT_DAYS.
+function lastEndDate(startDate: string) {
+  return toIsoDate(addDays(fromIsoDate(startDate), MAX_EVENT_DAYS - 1));
 }
 
 function fieldErrors(draft: EventBasicsDraft) {

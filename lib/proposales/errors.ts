@@ -1,4 +1,5 @@
-// A failed call to Proposales. The message is safe to show in the interface.
+// A failed call to Proposales. The message is for the server log: it can
+// contain text from Proposales, so route handlers show a fixed message instead.
 export type ProposalesErrorKind =
   | "http" // Proposales answered with an error status
   | "timeout" // no answer within the time limit
