@@ -1,31 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { currencyInText, formatDateRange, formatDateTime, formatMoney, plural } from "./format";
+import { formatDateRange, formatDateTime, formatMoney, plural } from "./format";
+
+// Intl separates the code and the amount with a non-breaking space.
+const space = "\u00a0";
 
 describe("formatMoney", () => {
-  it("formats the smallest unit as the currency's name with grouping", () => {
-    expect(formatMoney(1_240_000, "SEK")).toBe("12,400 Swedish kronor");
-    expect(formatMoney(1_240_000, "EUR")).toBe("12,400 euros");
-    expect(formatMoney(1_240_000, "USD")).toBe("12,400 US dollars");
-    expect(formatMoney(1_240_000, "GBP")).toBe("12,400 British pounds");
+  it("formats the smallest unit with the currency code and grouping", () => {
+    expect(formatMoney(1_240_000, "SEK")).toBe(`SEK${space}12,400`);
+    expect(formatMoney(1_240_000, "EUR")).toBe(`EUR${space}12,400`);
+    expect(formatMoney(1_240_000, "USD")).toBe(`USD${space}12,400`);
+    expect(formatMoney(1_240_000, "GBP")).toBe(`GBP${space}12,400`);
   });
 
   it("shows two decimals only when there are any", () => {
-    expect(formatMoney(104_050, "EUR")).toBe("1,040.50 euros");
-    expect(formatMoney(12_345, "SEK")).toBe("123.45 Swedish kronor");
-  });
-
-  it("uses the singular for exactly one", () => {
-    expect(formatMoney(100, "EUR")).toBe("1 euro");
-    expect(formatMoney(0, "GBP")).toBe("0 British pounds");
-  });
-});
-
-describe("currencyInText", () => {
-  it("names the currency in plural, as in a sentence", () => {
-    expect(currencyInText("SEK")).toBe("Swedish kronor");
-    expect(currencyInText("EUR")).toBe("euros");
-    expect(currencyInText("USD")).toBe("US dollars");
-    expect(currencyInText("GBP")).toBe("British pounds");
+    expect(formatMoney(104_050, "EUR")).toBe(`EUR${space}1,040.50`);
+    expect(formatMoney(12_345, "SEK")).toBe(`SEK${space}123.45`);
+    expect(formatMoney(0, "GBP")).toBe(`GBP${space}0`);
   });
 });
 

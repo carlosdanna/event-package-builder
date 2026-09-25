@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Typography } from "@/components/ui/typography";
-import { currencyInText, plural } from "@/lib/format";
+import { plural } from "@/lib/format";
 import type { Currency } from "@/lib/money";
 import { eventLength } from "@/lib/package";
 import {
@@ -107,7 +107,7 @@ export function BasicsStep({ draft, currency, showAllErrors, onChange }: BasicsS
 
       <Field
         id={basicsFieldIds.budget}
-        label={`Budget in ${currencyInText(currency)} (optional)`}
+        label={`Budget in ${currency} (optional)`}
         hint="Excluding tax. The summary shows how much of it the package uses."
         error={errorFor("budget")}
       >

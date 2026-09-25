@@ -4,7 +4,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const SESSION_COOKIE = "session";
-export const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+export const SESSION_MAX_AGE_SECONDS = 10 * 60;
 
 // The cookie value is derived from the password, so changing the password
 // signs everyone out and no second secret is needed.

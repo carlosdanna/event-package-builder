@@ -69,5 +69,6 @@ Each defines event type, default items by content title, and a rooms rule.
 - Small, readable functions. No clever abstractions.
 - Text styles go through Typography (components/ui/typography.tsx): pick the
   tag with `as`, adjust with size, weight and color, and use className for the rest.
-- Avoid acronyms in user-facing text and in comments.
+- Avoid acronyms in user-facing text and in comments. Currency codes (SEK, EUR,
+  USD, GBP) are the exception: the interface shows them instead of currency names.
 - Tests with Vitest. No live outside calls in tests.

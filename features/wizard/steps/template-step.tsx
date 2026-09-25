@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Typography } from "@/components/ui/typography";
 import type { CatalogItem } from "@/lib/catalog/schema";
 import { formatMoney } from "@/lib/format";
-import { currencyNames, currencySchema, type Currency } from "@/lib/money";
+import { currencySchema, type Currency } from "@/lib/money";
 import { ESTIMATE_GUESTS, estimatePerPerson } from "@/lib/package";
 import { templates, type Template, type TemplateIcon, type TemplateId } from "@/lib/templates";
 import { Field } from "./field";
@@ -81,7 +81,7 @@ function CurrencyPicker({
           <SelectContent>
             {currencySchema.options.map((option) => (
               <SelectItem key={option} value={option}>
-                {currencyNames[option]}
+                {option}
               </SelectItem>
             ))}
           </SelectContent>

@@ -39,7 +39,7 @@ pnpm dev                     # http://localhost:3000
 
 ## How pricing works
 
-Every catalog item has one of five pricing units and a price in each supported currency: Swedish kronor, euros, US dollars and British pounds. Prices are whole numbers in the smallest unit of their currency (öre, cents or pence). The unit decides the suggested quantity:
+Every catalog item has one of five pricing units and a price in each supported currency: SEK, EUR, USD and GBP. Prices are whole numbers in the smallest unit of their currency (öre, cents or pence). The unit decides the suggested quantity:
 
 | Unit | Quantity | Example: 45 guests, 2 days |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ The full-day conference for 45 guests over 2 days comes to 69,000 kronor. The Ha
 
 ### Currencies
 
-The salesperson picks the currency on the first step; Swedish kronor is the default. There are no exchange rates: each item has its own list price per currency in `lib/catalog/metadata.ts`, the way a hotel keeps a price list for foreign guests. The same conference in euros comes to 5,985 euros. Changing the currency keeps every other choice, and the draft, its product blocks and its stored subtotal are all in the chosen currency. Adding a currency means adding its code and a price for every item; the catalog schema refuses an item that misses one.
+The salesperson picks the currency on the first step; SEK is the default. The interface shows amounts with the currency code, such as EUR 1,040.50. There are no exchange rates: each item has its own list price per currency in `lib/catalog/metadata.ts`, the way a hotel keeps a price list for foreign guests. The same conference in euros comes to EUR 5,985. Changing the currency keeps every other choice, and the draft, its product blocks and its stored subtotal are all in the chosen currency. Adding a currency means adding its code and a price for every item; the catalog schema refuses an item that misses one.
 
 ### Physical limits
 
@@ -88,7 +88,7 @@ The browser makes three requests: the catalog, recent drafts, and creating a dra
 
 ### What Proposales could and couldn't store
 
-Proposales content stores a title and a description per language. That is enough for the seed script to create the hotel's catalog, and each description ends with a readable price line in Swedish kronor.
+Proposales content stores a title and a description per language. That is enough for the seed script to create the hotel's catalog, and each description ends with a readable price line in SEK.
 
 Content cannot store a category, a pricing unit, prices or a seating capacity. Those live in `lib/catalog/metadata.ts`, keyed by the English title, and the server merges them with the live content. A content item without metadata is left out with a warning in the server log, and metadata without content asks you to run the seed.
 

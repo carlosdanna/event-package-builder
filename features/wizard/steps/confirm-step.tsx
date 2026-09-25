@@ -14,7 +14,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { unitLabel } from "@/lib/catalog/labels";
 import { formatDateRange, formatMoney, plural } from "@/lib/format";
-import { currencyNames, type Currency } from "@/lib/money";
+import type { Currency } from "@/lib/money";
 import {
   eventLength,
   type CapacityIssue,
@@ -55,7 +55,7 @@ export function ConfirmStep(props: ConfirmStepProps) {
             ["Template", template.name],
             ["Guests", String(basics.guests)],
             ["Dates", `${formatDateRange(basics.startDate, basics.endDate)}, ${plural(days, "day")}`],
-            ["Currency", currencyNames[currency]],
+            ["Currency", currency],
             ["Budget", budget === null ? "Not set" : formatMoney(budget, currency)],
           ]}
         />

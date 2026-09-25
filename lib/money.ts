@@ -9,14 +9,6 @@ export type Currency = z.infer<typeof currencySchema>;
 
 export const DEFAULT_CURRENCY: Currency = "SEK";
 
-// Shown in the interface instead of the three-letter codes.
-export const currencyNames: Record<Currency, string> = {
-  SEK: "Swedish kronor",
-  EUR: "Euros",
-  USD: "US dollars",
-  GBP: "British pounds",
-};
-
 // 12.5 euros becomes 1250 cents.
 export function toMinorUnits(amount: number) {
   return Math.round(amount * 100);

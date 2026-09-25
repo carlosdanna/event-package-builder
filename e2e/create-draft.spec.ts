@@ -65,8 +65,8 @@ test("creates a conference draft with one changed quantity", async ({ page, next
 
   // Currency and template
   await page.getByRole("combobox", { name: "Currency" }).click();
-  await page.getByRole("option", { name: "Euros" }).click();
-  await expect(page.getByRole("combobox", { name: "Currency" })).toHaveText("Euros");
+  await page.getByRole("option", { name: "EUR" }).click();
+  await expect(page.getByRole("combobox", { name: "Currency" })).toHaveText("EUR");
   await page.getByRole("radio", { name: /Full-day conference/ }).check();
   await goNext(page);
 
@@ -94,7 +94,7 @@ test("creates a conference draft with one changed quantity", async ({ page, next
 
   // Confirm
   const coffeeRow = page.getByRole("row", { name: /Coffee break/ });
-  // 45 coffee breaks at 8.50 euros, whichever way the table is laid out.
+  // 45 coffee breaks at EUR 8.50, whichever way the table is laid out.
   const coffeePrice = coffeeBreak.prices.EUR;
   await expect(coffeeRow).toContainText(`45 × ${formatMoney(coffeePrice, "EUR")}`);
   await expect(coffeeRow).toContainText(formatMoney(45 * coffeePrice, "EUR"));
