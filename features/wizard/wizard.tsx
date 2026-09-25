@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import { ArrowLeftIcon, ArrowRightIcon, CircleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,16 @@ import { eventBasicsDraftSchema } from "@/lib/schemas/event-basics";
 import { getTemplate } from "@/lib/templates";
 import { DoneScreen } from "./done-screen";
 import { RecentDrafts } from "@/features/drafts/recent-drafts";
-import { BasicsStep, CustomerStep, PackageStep, ConfirmStep, TemplateStep } from "./steps";
+import {
+  BasicsStep,
+  ConfirmStep,
+  CustomerStep,
+  PackageStep,
+  TemplateStep,
+  basicsFieldIds,
+  customerFieldIds,
+} from "./steps";
+import { fieldErrors } from "./steps/field-errors";
 import { MobileSummaryBar, Summary, SummarySkeleton, type SummaryProps } from "./summary";
 import { useCatalog } from "@/features/catalog/use-catalog";
 import { useCreateDraft } from "@/features/drafts/use-create-draft";
@@ -277,6 +287,14 @@ function StepButtons({
 }) {
   const needsTemplate = state.step === 0 && state.templateId === null;
 
+  // When the step has errors, they are shown first and then the first invalid
+  // field gets focus, so screen readers read its error with it.
+  function goNext() {
+    const invalidFieldId = firstInvalidFieldId(state);
+    flushSync(() => dispatch({ type: "next" }));
+    if (invalidFieldId) document.getElementById(invalidFieldId)?.focus();
+  }
+
   return (
     <div className="flex items-center justify-between gap-3 border-t pt-4">
       <Button
@@ -292,7 +310,7 @@ function StepButtons({
           {needsTemplate && (
             <span className="text-sm text-muted-foreground">Pick a template to continue.</span>
           )}
-          <Button onClick={() => dispatch({ type: "next" })} disabled={needsTemplate}>
+          <Button onClick={goNext} disabled={needsTemplate}>
             Next
             <ArrowRightIcon aria-hidden />
           </Button>
@@ -300,6 +318,26 @@ function StepButtons({
       )}
     </div>
   );
+}
+
+// The id of the first field with an error on the current step, or null.
+function firstInvalidFieldId(state: WizardState) {
+  if (state.step === 1) {
+    return firstWithError(fieldErrors(eventBasicsDraftSchema, state.basics), basicsFieldIds);
+  }
+  if (state.step === 3) {
+    return firstWithError(fieldErrors(customerDetailsDraftSchema, state.customer), customerFieldIds);
+  }
+  return null;
+}
+
+// Field ids are listed in form order.
+function firstWithError<Field extends string>(
+  errors: Partial<Record<Field, string>>,
+  ids: Record<Field, string>,
+) {
+  const field = (Object.keys(ids) as Field[]).find((name) => errors[name]);
+  return field ? ids[field] : null;
 }
 
 function StepSkeleton() {

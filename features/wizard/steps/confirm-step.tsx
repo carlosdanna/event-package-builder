@@ -110,7 +110,13 @@ function ReviewSection({ title, editLabel, onEdit, children }: ReviewSectionProp
         <h3 id={headingId} className="font-medium">
           {title}
         </h3>
-        <Button variant="link" size="sm" onClick={onEdit} aria-label={editLabel}>
+        <Button
+          variant="link"
+          size="sm"
+          className="max-sm:h-11"
+          onClick={onEdit}
+          aria-label={editLabel}
+        >
           <PencilIcon aria-hidden />
           Edit
         </Button>

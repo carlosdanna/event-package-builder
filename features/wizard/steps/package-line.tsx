@@ -58,6 +58,7 @@ export function PackageLine({
             <Button
               variant="ghost"
               size="icon-sm"
+              className="max-sm:size-11"
               onClick={onReset}
               aria-label={`Reset ${line.title} to the suggested ${line.derivedQuantity}`}
               title={`Reset to ${line.derivedQuantity}`}
@@ -68,6 +69,7 @@ export function PackageLine({
           <Button
             variant="ghost"
             size="icon-sm"
+            className="max-sm:size-11"
             onClick={onRemove}
             aria-label={`Remove ${line.title}`}
             title="Remove"
@@ -115,7 +117,7 @@ function QuantityInput({ id, label, quantity, onChange }: QuantityInputProps) {
       min={0}
       max={MAX_QUANTITY}
       step={1}
-      className="w-20 text-right tabular-nums"
+      className="w-20 text-right tabular-nums max-sm:h-11"
       value={text}
       onChange={(event) => {
         setText(event.target.value);

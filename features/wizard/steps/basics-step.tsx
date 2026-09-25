@@ -20,6 +20,14 @@ import { fieldErrors } from "./field-errors";
 
 type FieldName = keyof EventBasicsDraft;
 
+// Element ids in form order, so the wizard can focus the first invalid field.
+export const basicsFieldIds: Record<FieldName, string> = {
+  guests: "guests",
+  startDate: "start-date",
+  endDate: "end-date",
+  budgetKronor: "budget",
+};
+
 type BasicsStepProps = {
   draft: EventBasicsDraft;
   showAllErrors: boolean;
@@ -34,10 +42,10 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
 
   return (
     <div className="flex flex-col gap-6">
-      <Field id="guests" label="Number of guests" error={errorFor("guests")}>
+      <Field id={basicsFieldIds.guests} label="Number of guests" error={errorFor("guests")}>
         {(describedBy) => (
           <Input
-            id="guests"
+            id={basicsFieldIds.guests}
             type="number"
             inputMode="numeric"
             min={1}
@@ -56,10 +64,10 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
 
       <div className="flex flex-col gap-2">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="start-date" label="Start date" error={errorFor("startDate")}>
+          <Field id={basicsFieldIds.startDate} label="Start date" error={errorFor("startDate")}>
             {(describedBy) => (
               <DatePicker
-                id="start-date"
+                id={basicsFieldIds.startDate}
                 value={draft.startDate}
                 describedBy={describedBy}
                 invalid={Boolean(errorFor("startDate"))}
@@ -74,10 +82,10 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
               />
             )}
           </Field>
-          <Field id="end-date" label="End date" error={errorFor("endDate")}>
+          <Field id={basicsFieldIds.endDate} label="End date" error={errorFor("endDate")}>
             {(describedBy) => (
               <DatePicker
-                id="end-date"
+                id={basicsFieldIds.endDate}
                 value={draft.endDate}
                 earliest={draft.startDate}
                 latest={draft.startDate ? lastEndDate(draft.startDate) : undefined}
@@ -95,14 +103,14 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
       </div>
 
       <Field
-        id="budget"
+        id={basicsFieldIds.budgetKronor}
         label="Budget in kronor (optional)"
         hint="Excluding tax. The summary shows how much of it the package uses."
         error={errorFor("budgetKronor")}
       >
         {(describedBy) => (
           <Input
-            id="budget"
+            id={basicsFieldIds.budgetKronor}
             inputMode="numeric"
             placeholder="For example 120,000"
             className="max-w-56"
@@ -142,6 +150,8 @@ function DatePicker({ id, value, earliest, latest, describedBy, invalid, onChang
           id={id}
           variant="outline"
           className="w-full justify-start font-normal sm:max-w-64"
+          // The label alone would hide the chosen date from screen readers.
+          aria-labelledby={`${id}-label ${id}`}
           aria-invalid={invalid}
           aria-describedby={describedBy}
         >

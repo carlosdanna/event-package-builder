@@ -16,7 +16,9 @@ export function Field({ id, label, hint, error, children }: FieldProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label id={`${id}-label`} htmlFor={id}>
+        {label}
+      </Label>
       {children(describedBy)}
       {hint && (
         <p id={hintId} className="text-sm text-muted-foreground">
