@@ -23,7 +23,7 @@ import type { CustomerDetails } from "@/lib/schemas/customer";
 import type { EventBasics } from "@/lib/schemas/event-basics";
 import type { Template } from "@/lib/templates";
 
-type ReviewStepProps = {
+type ConfirmStepProps = {
   template: Template;
   basics: EventBasics;
   budgetOre: number | null;
@@ -37,7 +37,7 @@ type ReviewStepProps = {
 };
 
 // Read-only check of everything before the draft is created.
-export function ReviewStep(props: ReviewStepProps) {
+export function ConfirmStep(props: ConfirmStepProps) {
   const { template, basics, budgetOre, lines, summary, capacityIssues, customer } = props;
   const { days } = eventLength(basics.startDate, basics.endDate);
   const isEmpty = !lines.some((line) => line.quantity > 0);

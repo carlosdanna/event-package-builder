@@ -11,12 +11,12 @@ import { assemblePackage, capacityIssues, summarize } from "@/lib/package";
 import { customerDetailsDraftSchema } from "@/lib/schemas/customer";
 import { eventBasicsDraftSchema } from "@/lib/schemas/event-basics";
 import { getTemplate } from "@/lib/templates";
-import { DoneScreen } from "../done-screen";
-import { RecentDrafts } from "../recent-drafts";
-import { BasicsStep, CustomerStep, PackageStep, ReviewStep, TemplateStep } from "../steps";
-import { MobileSummaryBar, Summary, SummarySkeleton, type SummaryProps } from "../summary";
-import { useCatalog } from "../use-catalog";
-import { useCreateProposal } from "../use-create-proposal";
+import { DoneScreen } from "./done-screen";
+import { RecentDrafts } from "@/features/drafts/recent-drafts";
+import { BasicsStep, CustomerStep, PackageStep, ConfirmStep, TemplateStep } from "./steps";
+import { MobileSummaryBar, Summary, SummarySkeleton, type SummaryProps } from "./summary";
+import { useCatalog } from "@/features/catalog/use-catalog";
+import { useCreateDraft } from "@/features/drafts/use-create-draft";
 import { ProgressSteps } from "./progress-steps";
 import {
   LAST_STEP,
@@ -34,7 +34,7 @@ export function Wizard() {
   const catalog = catalogQuery.data;
   const priced = usePricedPackage(state, catalog);
   const headingRef = useStepFocus(state.step);
-  const createMutation = useCreateProposal();
+  const createMutation = useCreateDraft();
   // Set before the first render after a click, so a fast second click or the
   // toast's retry cannot send the same draft twice.
   const creatingRef = useRef(false);
@@ -245,7 +245,7 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
       const template = state.templateId ? getTemplate(state.templateId) : undefined;
       if (!priced || !customer.success || !template) return null;
       return (
-        <ReviewStep
+        <ConfirmStep
           template={template}
           basics={priced.basics}
           budgetOre={priced.budgetOre}

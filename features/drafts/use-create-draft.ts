@@ -6,9 +6,9 @@ import {
   routeErrorSchema,
   type CreateProposalRequest,
 } from "@/lib/schemas";
-import { RECENT_PROPOSALS_KEY } from "./use-recent-proposals";
+import { RECENT_DRAFTS_KEY } from "./use-recent-drafts";
 
-async function createProposal(request: CreateProposalRequest) {
+async function createDraft(request: CreateProposalRequest) {
   const response = await fetch("/api/proposals", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -26,10 +26,10 @@ async function createProposal(request: CreateProposalRequest) {
 }
 
 // Sends the salesperson's choices, never prices: the server recalculates them.
-export function useCreateProposal() {
+export function useCreateDraft() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createProposal,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: RECENT_PROPOSALS_KEY }),
+    mutationFn: createDraft,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: RECENT_DRAFTS_KEY }),
   });
 }

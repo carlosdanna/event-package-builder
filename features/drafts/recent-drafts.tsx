@@ -2,13 +2,13 @@
 
 import { ExternalLinkIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecentProposals } from "./use-recent-proposals";
+import { useRecentDrafts } from "./use-recent-drafts";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
 // Drafts this app created, newest first. Never blocks the wizard.
 export function RecentDrafts() {
-  const query = useRecentProposals();
+  const query = useRecentDrafts();
 
   return (
     <section aria-labelledby="recent-drafts-heading" className="flex flex-col gap-3">

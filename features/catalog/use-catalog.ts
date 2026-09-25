@@ -19,7 +19,7 @@ async function fetchCatalog() {
 
 export function useCatalog() {
   return useQuery({
-    queryKey: ["content"],
+    queryKey: ["catalog"],
     queryFn: fetchCatalog,
     staleTime: CATALOG_STALE_TIME,
   });

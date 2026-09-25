@@ -3,9 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { recentProposalsResponseSchema, routeErrorSchema } from "@/lib/schemas";
 
-export const RECENT_PROPOSALS_KEY = ["proposals"];
+export const RECENT_DRAFTS_KEY = ["proposals"];
 
-async function fetchRecentProposals() {
+async function fetchRecentDrafts() {
   const response = await fetch("/api/proposals");
   const body: unknown = await response.json().catch(() => null);
 
@@ -16,6 +16,6 @@ async function fetchRecentProposals() {
   return recentProposalsResponseSchema.parse(body).items;
 }
 
-export function useRecentProposals() {
-  return useQuery({ queryKey: RECENT_PROPOSALS_KEY, queryFn: fetchRecentProposals });
+export function useRecentDrafts() {
+  return useQuery({ queryKey: RECENT_DRAFTS_KEY, queryFn: fetchRecentDrafts });
 }
