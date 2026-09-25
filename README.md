@@ -21,7 +21,7 @@ pnpm dev
 - `pnpm build`: production build
 - `pnpm lint`: ESLint
 - `pnpm test`: Vitest
-- `pnpm seed`: seeds Proposales content (placeholder for now)
+- `pnpm seed`: creates or updates the catalog content in Proposales (`--cleanup` archives it). Prices, units and categories live in `lib/catalog/metadata.ts`, because Proposales content cannot store them.
 
 ## Commits
 

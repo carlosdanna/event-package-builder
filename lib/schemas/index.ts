@@ -1,2 +1,3 @@
 // Zod schemas for templates, wizard steps, route input, and outside responses.
-export {};
+export * from "./content";
+export * from "./event-basics";

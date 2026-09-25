@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ContentCount } from "./_components/content-count";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
           Pick an event template, adjust the suggested package, and create a
           draft proposal in Proposales.
         </p>
+        <ContentCount />
       </header>
 
       <Card>
