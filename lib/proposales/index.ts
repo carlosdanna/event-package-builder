@@ -15,8 +15,10 @@ import {
   listOf,
   proposalCreatedSchema,
   proposalSearchResultSchema,
+  updateContentInputSchema,
   type CreateContentInput,
   type CreateProposalInput,
+  type UpdateContentInput,
 } from "./schemas";
 
 export { ProposalesError } from "./errors";
@@ -55,6 +57,15 @@ export async function createContent(input: CreateContentInput) {
   const response = await proposalesFetch("/v3/content", {
     method: "POST",
     body: createContentInputSchema.parse(input),
+    schema: contentCreatedSchema,
+  });
+  return response.data;
+}
+
+export async function updateContent(input: UpdateContentInput) {
+  const response = await proposalesFetch("/v3/content", {
+    method: "PUT",
+    body: updateContentInputSchema.parse(input),
     schema: contentCreatedSchema,
   });
   return response.data;

@@ -55,6 +55,15 @@ export const createContentInputSchema = z.object({
 });
 export type CreateContentInput = z.infer<typeof createContentInputSchema>;
 
+export const updateContentInputSchema = z.object({
+  variation_id: z.number().int().positive(),
+  language: z.string().min(2),
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+});
+export type UpdateContentInput = z.infer<typeof updateContentInputSchema>;
+
+// Returned by both create and update.
 export const contentCreatedSchema = z.object({
   data: z.looseObject({
     product_id: z.number().int(),
