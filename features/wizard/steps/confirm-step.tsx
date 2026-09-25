@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Typography } from "@/components/ui/typography";
 import { unitLabel } from "@/lib/catalog/labels";
 import { formatDateRange, formatKronor, plural } from "@/lib/format";
 import {
@@ -59,13 +60,18 @@ export function ConfirmStep(props: ConfirmStepProps) {
 
       <ReviewSection title="Package" onEdit={() => props.onEdit(2)} editLabel="Edit the package">
         {issues.map((issue) => (
-          <p key={issue.contentId} className="flex items-center gap-2 text-sm text-destructive">
+          <Typography
+            key={issue.contentId}
+            size="sm"
+            color="destructive"
+            className="flex items-center gap-2"
+          >
             <CircleAlertIcon aria-hidden className="size-4 shrink-0" />
             {issue.title}: {issue.reason}
-          </p>
+          </Typography>
         ))}
         {lines.length === 0 ? (
-          <p className="text-sm text-muted-foreground">The package is empty.</p>
+          <Typography size="sm" color="muted">The package is empty.</Typography>
         ) : (
           <PackageTable lines={lines} summary={summary} />
         )}
@@ -83,13 +89,13 @@ export function ConfirmStep(props: ConfirmStepProps) {
       </ReviewSection>
 
       <div className="flex flex-col gap-2 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
+        <Typography size="sm" color="muted">
           {isEmpty
             ? "Add at least one item to the package first."
             : hasIssues
               ? "Fix the package above before creating the draft."
               : "Creates a draft in Proposales. Nothing is sent to the customer."}
-        </p>
+        </Typography>
         <Button size="lg" onClick={props.onCreate} disabled={props.pending || isEmpty || hasIssues}>
           {props.pending && <LoaderCircleIcon aria-hidden className="animate-spin" />}
           {props.pending ? "Creating draft…" : "Create draft proposal"}
@@ -111,9 +117,9 @@ function ReviewSection({ title, editLabel, onEdit, children }: ReviewSectionProp
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h3 id={headingId} className="font-medium">
+        <Typography as="h3" id={headingId}>
           {title}
-        </h3>
+        </Typography>
         <Button
           variant="link"
           size="sm"
@@ -160,14 +166,21 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
           <TableRow key={line.contentId}>
             <TableCell className="whitespace-normal">
               {line.title}
-              <span className="block text-xs text-muted-foreground tabular-nums sm:hidden">
+              <Typography
+                as="span"
+                size="xs"
+                color="muted"
+                className="block tabular-nums sm:hidden"
+              >
                 {line.quantity} × {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
-              </span>
+              </Typography>
             </TableCell>
             <TableCell className="text-right tabular-nums max-sm:hidden">{line.quantity}</TableCell>
             <TableCell className="text-right whitespace-normal tabular-nums max-sm:hidden">
               {formatKronor(line.unitPriceOre)}
-              <span className="block text-xs text-muted-foreground">{unitLabel(line.unit)}</span>
+              <Typography as="span" size="xs" color="muted" className="block">
+                {unitLabel(line.unit)}
+              </Typography>
             </TableCell>
             <TableCell className="text-right tabular-nums">
               {formatKronor(line.lineTotalOre)}

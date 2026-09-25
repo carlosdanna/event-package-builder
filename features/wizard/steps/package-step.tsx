@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { categoryLabel } from "@/lib/catalog/labels";
 import { catalogCategorySchema, type CatalogItem } from "@/lib/catalog/schema";
 import { addableItems, type CapacityIssue, type LineItem } from "@/lib/package";
@@ -36,9 +37,9 @@ export function PackageStep({
   return (
     <div className="flex flex-col gap-6">
       {lines.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <Typography size="sm" color="muted">
           The package is empty. Add items from the catalog.
-        </p>
+        </Typography>
       )}
 
       {catalogCategorySchema.options.map((category) => {
@@ -47,9 +48,9 @@ export function PackageStep({
         const headingId = `section-${category}`;
         return (
           <section key={category} aria-labelledby={headingId}>
-            <h3 id={headingId} className="text-sm font-medium text-muted-foreground">
+            <Typography as="h3" id={headingId} variant="h4" color="muted">
               {categoryLabel(category)}
-            </h3>
+            </Typography>
             <ul className="divide-y">
               {inSection.map((line) => (
                 <PackageLine

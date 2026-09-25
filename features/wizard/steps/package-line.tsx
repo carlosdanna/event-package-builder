@@ -5,6 +5,7 @@ import { InfoIcon, RotateCcwIcon, TrashIcon, TriangleAlertIcon } from "lucide-re
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { availableLabel, unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
 import { shortfall, type CapacityIssue, type LineItem } from "@/lib/package";
@@ -37,13 +38,13 @@ export function PackageLine({
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_7rem_4.25rem]">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{line.title}</span>
+            <Typography as="span" weight="medium">{line.title}</Typography>
             {isCustom && <Badge variant="secondary">Custom</Badge>}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <Typography as="span" size="sm" color="muted">
             {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
             {available && ` · ${available}`}
-          </span>
+          </Typography>
         </div>
 
         <QuantityInput
@@ -54,9 +55,13 @@ export function PackageLine({
           onChange={onQuantityChange}
         />
 
-        <span className="text-right font-medium tabular-nums max-sm:col-start-1 max-sm:row-start-2 max-sm:text-left">
+        <Typography
+          as="span"
+          weight="medium"
+          className="text-right tabular-nums max-sm:col-start-1 max-sm:row-start-2 max-sm:text-left"
+        >
           {formatKronor(line.lineTotalOre)}
-        </span>
+        </Typography>
 
         <div className="flex justify-end gap-1 max-sm:col-start-2 max-sm:row-start-2">
           {isCustom && (
@@ -85,21 +90,21 @@ export function PackageLine({
       </div>
 
       {issue && (
-        <p className="flex items-center gap-1.5 text-sm text-destructive">
+        <Typography size="sm" color="destructive" className="flex items-center gap-1.5">
           <TriangleAlertIcon aria-hidden className="size-4 shrink-0" />
           {issue.reason}.{" "}
           {line.category === "meeting_space" && line.capacity !== undefined
             ? "Remove it and add a bigger space."
             : "Lower the quantity."}
-        </p>
+        </Typography>
       )}
 
       {!issue && missing > 0 && (
-        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Typography size="sm" color="muted" className="flex items-center gap-1.5">
           <InfoIcon aria-hidden className="size-4 shrink-0" />
           {line.neededQuantity} needed, but the hotel has only {line.maxQuantity} for these dates.
           The other {missing} must be arranged elsewhere.
-        </p>
+        </Typography>
       )}
     </li>
   );

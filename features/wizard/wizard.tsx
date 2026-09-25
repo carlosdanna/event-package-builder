@@ -7,6 +7,7 @@ import { ArrowLeftIcon, ArrowRightIcon, CircleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import type { CatalogItem } from "@/lib/catalog/schema";
 import { assemblePackage, packageIssues, summarize } from "@/lib/package";
 import { customerDetailsDraftSchema } from "@/lib/schemas/customer";
@@ -107,14 +108,15 @@ export function Wizard() {
       {/* grid-cols-1 is minmax(0, 1fr): long, cut-off text cannot widen the page on phones. */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <section aria-labelledby="step-heading" className="flex flex-col gap-6">
-          <h2
+          <Typography
+            as="h2"
             id="step-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="text-xl font-semibold tracking-tight outline-none"
+            className="outline-none"
           >
             {STEPS[state.step].title}
-          </h2>
+          </Typography>
 
           {catalogQuery.isPending ? (
             <StepSkeleton />
@@ -310,7 +312,7 @@ function StepButtons({
       {state.step < LAST_STEP && (
         <div className="flex items-center gap-3">
           {needsTemplate && (
-            <span className="text-sm text-muted-foreground">Pick a template to continue.</span>
+            <Typography as="span" size="sm" color="muted">Pick a template to continue.</Typography>
           )}
           <Button onClick={goNext} disabled={needsTemplate}>
             Next

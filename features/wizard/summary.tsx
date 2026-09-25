@@ -14,6 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { formatKronor } from "@/lib/format";
 import { budgetUsage, type LineItem, type PackageSummary } from "@/lib/package";
 import { cn } from "@/lib/utils";
@@ -47,11 +48,17 @@ export function MobileSummaryBar(props: SummaryProps) {
       <Sheet>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Total excluding tax</span>
+            <Typography as="span" size="xs" color="muted">Total excluding tax</Typography>
             {/* The desktop summary is hidden on phones, so the total is announced here. */}
-            <span className="font-semibold tabular-nums" aria-live="polite" aria-atomic="true">
+            <Typography
+              as="span"
+              aria-live="polite"
+              aria-atomic="true"
+              weight="semibold"
+              className="tabular-nums"
+            >
               {total}
-            </span>
+            </Typography>
           </div>
           <SheetTrigger asChild>
             <Button variant="outline">
@@ -75,23 +82,23 @@ export function MobileSummaryBar(props: SummaryProps) {
 export function SummaryContent({ lines, summary, budgetOre }: SummaryProps) {
   if (!summary) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <Typography size="sm" color="muted">
         Pick a template and enter guests and dates to see the price.
-      </p>
+      </Typography>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
       {lines.length === 0 ? (
-        <p className="text-sm text-muted-foreground">The package is empty.</p>
+        <Typography size="sm" color="muted">The package is empty.</Typography>
       ) : (
         <ul className="flex flex-col gap-2 text-sm">
           {lines.map((line) => (
             <li key={line.contentId} className="flex justify-between gap-3">
               <span className="min-w-0">
                 {line.title}
-                <span className="text-muted-foreground"> × {line.quantity}</span>
+                <Typography as="span" color="muted"> × {line.quantity}</Typography>
               </span>
               <span className="shrink-0 tabular-nums">{formatKronor(line.lineTotalOre)}</span>
             </li>
@@ -114,7 +121,7 @@ export function SummaryContent({ lines, summary, budgetOre }: SummaryProps) {
             <dd className="tabular-nums">{formatKronor(summary.perPersonOre)}</dd>
           </div>
         )}
-        <p className="text-xs text-muted-foreground">Prices exclude tax.</p>
+        <Typography size="xs" color="muted">Prices exclude tax.</Typography>
       </dl>
 
       <BudgetBar subtotalOre={summary.subtotalOre} budgetOre={budgetOre} status={summary.budget} />
@@ -153,7 +160,9 @@ function BudgetBar({ subtotalOre, budgetOre, status }: BudgetBarProps) {
     <div className="flex flex-col gap-2">
       <div className="flex justify-between gap-3 text-sm">
         <span className={cn("font-medium", colours.text)}>{text}</span>
-        <span className="text-muted-foreground tabular-nums">{formatKronor(budgetOre)}</span>
+        <Typography as="span" color="muted" className="tabular-nums">
+          {formatKronor(budgetOre)}
+        </Typography>
       </div>
       <Progress
         value={Math.min(usage.percent, 100)}

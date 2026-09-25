@@ -9,6 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Typography } from "@/components/ui/typography";
 import { catalogCategorySchema, type CatalogItem } from "@/lib/catalog/schema";
 import { availableLabel, categoryLabel, unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
@@ -58,10 +59,10 @@ export function AddItemDialog({ open, onOpenChange, items, guests, onAdd }: AddI
                     >
                       <span className="flex flex-1 flex-col">
                         <span>{item.title}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <Typography as="span" size="xs" color="muted">
                           {issue ??
                             `${formatKronor(item.priceOre)} ${unitLabel(item.unit)}${available ? ` · ${available}` : ""}`}
-                        </span>
+                        </Typography>
                       </span>
                     </CommandItem>
                   );

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Typography } from "@/components/ui/typography";
 import { plural } from "@/lib/format";
 import { eventLength } from "@/lib/package";
 import {
@@ -159,7 +160,7 @@ function DatePicker({ id, value, earliest, latest, describedBy, invalid, onChang
           {selected ? (
             format(selected, "EEE d MMM yyyy")
           ) : (
-            <span className="text-muted-foreground">Pick a date</span>
+            <Typography as="span" color="muted">Pick a date</Typography>
           )}
         </Button>
       </PopoverTrigger>
@@ -187,9 +188,9 @@ function EventLengthNote({ startDate, endDate }: { startDate: string; endDate: s
   if (!startDate || !endDate || endDate < startDate) return null;
   const { days, nights } = eventLength(startDate, endDate);
   return (
-    <p className="text-sm text-muted-foreground" aria-live="polite">
+    <Typography aria-live="polite" size="sm" color="muted">
       {plural(days, "day")}, {plural(nights, "night")}
-    </p>
+    </Typography>
   );
 }
 

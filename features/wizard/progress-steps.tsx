@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon } from "lucide-react";
+import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { STEPS } from "./reducer";
 
@@ -75,10 +76,10 @@ export function ProgressSteps({ current, isReachable, onSelect }: ProgressStepsP
           );
         })}
       </ol>
-      <p aria-hidden className="mt-3 text-sm text-muted-foreground sm:hidden">
+      <Typography aria-hidden size="sm" color="muted" className="mt-3 sm:hidden">
         Step {current + 1} of {STEPS.length}:{" "}
-        <span className="font-medium text-foreground">{STEPS[current].label}</span>
-      </p>
+        <Typography as="span" weight="medium" color="foreground">{STEPS[current].label}</Typography>
+      </Typography>
     </nav>
   );
 }

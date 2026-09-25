@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { CircleCheckIcon, ExternalLinkIcon, RotateCcwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { formatKronor } from "@/lib/format";
 import type { CreateProposalResponse } from "@/lib/schemas";
 
@@ -23,14 +24,17 @@ export function DoneScreen({ proposal, onStartOver }: DoneScreenProps) {
       <CardContent className="flex flex-col items-center gap-6 py-6 text-center">
         <CircleCheckIcon aria-hidden className="size-12 text-emerald-600 dark:text-emerald-400" />
         <div className="flex flex-col gap-2">
-          <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold outline-none">
+          <Typography as="h2" ref={headingRef} tabIndex={-1} className="outline-none">
             Draft proposal created
-          </h2>
-          <p className="text-muted-foreground">{proposal.title}</p>
-          <p className="text-lg font-semibold tabular-nums">
+          </Typography>
+          <Typography size="sm" color="muted">{proposal.title}</Typography>
+          <Typography size="lg" weight="semibold" className="tabular-nums">
             {formatKronor(proposal.subtotalOre)}
-            <span className="text-sm font-normal text-muted-foreground"> excluding tax</span>
-          </p>
+            <Typography as="span" size="sm" weight="normal" color="muted">
+              {" "}
+              excluding tax
+            </Typography>
+          </Typography>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button asChild>

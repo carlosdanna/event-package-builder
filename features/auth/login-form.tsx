@@ -6,6 +6,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { Field } from "@/features/wizard/steps/field";
 import { useSignIn } from "./use-session";
 
@@ -32,7 +33,7 @@ export function LoginForm() {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>
-          <h1 className="text-xl font-semibold tracking-tight">Event Package Builder</h1>
+          <Typography as="h1" size="xl">Event Package Builder</Typography>
         </CardTitle>
         <CardDescription>Enter the team password to continue.</CardDescription>
       </CardHeader>

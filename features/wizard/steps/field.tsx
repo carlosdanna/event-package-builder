@@ -1,5 +1,6 @@
 // A labelled form field with an optional hint and error, wired up for screen readers.
 import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 
 type FieldProps = {
   id: string;
@@ -21,14 +22,14 @@ export function Field({ id, label, hint, error, children }: FieldProps) {
       </Label>
       {children(describedBy)}
       {hint && (
-        <p id={hintId} className="text-sm text-muted-foreground">
+        <Typography id={hintId} size="sm" color="muted">
           {hint}
-        </p>
+        </Typography>
       )}
       {error && (
-        <p id={errorId} className="text-sm text-destructive">
+        <Typography id={errorId} size="sm" color="destructive">
           {error}
-        </p>
+        </Typography>
       )}
     </div>
   );

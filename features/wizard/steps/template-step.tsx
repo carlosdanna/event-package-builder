@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Typography } from "@/components/ui/typography";
 import type { CatalogItem } from "@/lib/catalog/schema";
 import { formatKronor } from "@/lib/format";
 import { ESTIMATE_GUESTS, estimatePerPersonOre } from "@/lib/package";
@@ -59,8 +60,8 @@ function TemplateCard({ template, catalog }: { template: Template; catalog: Cata
           <Icon aria-hidden className="size-5" />
         </span>
         <span className="flex flex-1 flex-col gap-1">
-          <span className="font-medium">{template.name}</span>
-          <span className="text-sm text-muted-foreground">{template.description}</span>
+          <Typography as="span" weight="medium">{template.name}</Typography>
+          <Typography as="span" size="sm" color="muted">{template.description}</Typography>
         </span>
         <RadioGroupItem id={inputId} value={template.id} className="mt-1" />
       </span>
@@ -74,10 +75,14 @@ function TemplateCard({ template, catalog }: { template: Template; catalog: Cata
       </ul>
 
       {estimateOre !== null && (
-        <span className="mt-auto text-sm">
-          From <span className="font-medium">{formatKronor(estimateOre)}</span> per person
-          <span className="text-muted-foreground"> for {ESTIMATE_GUESTS} guests</span>
-        </span>
+        <Typography as="span" size="sm" className="mt-auto">
+          From{" "}
+          <Typography as="span" weight="medium">
+            {formatKronor(estimateOre)}
+          </Typography>{" "}
+          per person
+          <Typography as="span" color="muted"> for {ESTIMATE_GUESTS} guests</Typography>
+        </Typography>
       )}
     </label>
   );
