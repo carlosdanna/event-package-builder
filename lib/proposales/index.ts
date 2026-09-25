@@ -101,16 +101,22 @@ export async function createProposal(input: CreateProposalInput) {
   return response.proposal;
 }
 
+// dataFilter matches keys in the proposal data, for example { source: "event-package-builder" }.
 export async function searchProposals(options: {
   companyId?: number;
   recipientEmail?: string;
   limit?: number;
+  dataFilter?: Record<string, string>;
 }) {
+  const filters = Object.fromEntries(
+    Object.entries(options.dataFilter ?? {}).map(([key, value]) => [`filter[${key}]`, value]),
+  );
   const response = await proposalesFetch("/v3/proposal-search", {
     query: {
       company_id: options.companyId,
       recipient_email: options.recipientEmail,
       limit: options.limit,
+      ...filters,
     },
     schema: listOf(proposalSearchResultSchema),
   });
