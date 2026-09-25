@@ -3,3 +3,4 @@
 export * from "./schema";
 export * from "./merge";
 export { catalogMetadata } from "./metadata";
+export * from "./labels";

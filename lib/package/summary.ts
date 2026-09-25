@@ -28,3 +28,14 @@ export function budgetStatus(subtotalOre: number, budgetOre?: number | null): Bu
   if (subtotalOre * 10 >= budgetOre * 9) return "near";
   return "ok";
 }
+
+export type BudgetUsage = { percent: number; overOre: number };
+
+// How much of the budget the package uses, for the budget bar and its text.
+export function budgetUsage(subtotalOre: number, budgetOre?: number | null): BudgetUsage | null {
+  if (budgetOre === undefined || budgetOre === null || budgetOre <= 0) return null;
+  return {
+    percent: Math.round((subtotalOre * 100) / budgetOre),
+    overOre: Math.max(subtotalOre - budgetOre, 0),
+  };
+}
