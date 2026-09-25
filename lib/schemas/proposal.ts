@@ -24,7 +24,7 @@ export const recentProposalSchema = z.object({
   title: z.string(),
   status: z.string().nullable(),
   url: z.string(),
-  updatedAt: z.number().int(), // seconds since 1970, as Proposales sends it
+  updatedAt: z.number().int(), // milliseconds since 1970, as Proposales sends it
 });
 export type RecentProposal = z.infer<typeof recentProposalSchema>;
 

@@ -57,8 +57,8 @@ export function proposalTitle(template: Template, basics: EventBasics, customer:
 function proposalDescription(basics: EventBasics) {
   const { days } = eventLength(basics.startDate, basics.endDate);
   return [
-    `**Guests:** ${basics.guests}`,
-    `**Dates:** ${formatDateRange(basics.startDate, basics.endDate)} (${days} ${days === 1 ? "day" : "days"})`,
+    `- **Guests:** ${basics.guests}`,
+    `- **Dates:** ${formatDateRange(basics.startDate, basics.endDate)} (${days} ${days === 1 ? "day" : "days"})`,
     "",
     "All prices exclude tax.",
   ].join("\n");

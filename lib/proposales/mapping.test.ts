@@ -56,7 +56,7 @@ describe("buildCreateProposalInput", () => {
         company_name: "Acme AB",
       },
     });
-    expect(input.description_md).toContain("**Guests:** 45");
+    expect(input.description_md).toContain("- **Guests:** 45");
     expect(input.description_md).toContain("14–15 Oct 2026 (2 days)");
     expect(input.description_md).toContain("All prices exclude tax.");
   });
