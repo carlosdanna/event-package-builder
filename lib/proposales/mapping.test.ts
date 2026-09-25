@@ -38,21 +38,32 @@ describe("buildCreateProposalInput", () => {
     const input = build();
 
     expect(input.blocks).toEqual([
-      block("Harbour Room", 2, 1_800_000),
-      block("Coffee break", 90, 9_500),
-      block("Conference lunch", 90, 24_500),
-      block("Projector and screen", 2, 120_000),
+      block("Harbour Room", 2, 1_800_000, 2_250_000),
+      block("Coffee break", 90, 9_500, 10_640),
+      block("Conference lunch", 90, 24_500, 27_440),
+      block("Projector and screen", 2, 120_000, 150_000),
     ]);
+  });
+
+  it("fills all four unit values, since Proposales totals the ones after discount", () => {
+    const [harbourRoom] = build().blocks ?? [];
+
+    expect(harbourRoom).toMatchObject({
+      unit_value_without_discount_without_tax: 1_800_000,
+      unit_value_with_discount_without_tax: 1_800_000,
+      unit_value_without_discount_with_tax: 2_250_000,
+      unit_value_with_discount_with_tax: 2_250_000,
+    });
   });
 
   it("sends every block and the stored subtotal in the chosen currency", () => {
     const input = build({}, customer, "GBP");
 
     expect(input.blocks).toEqual([
-      block("Harbour Room", 2, 135_000, "GBP"),
-      block("Coffee break", 90, 700, "GBP"),
-      block("Conference lunch", 90, 1_800, "GBP"),
-      block("Projector and screen", 2, 8_900, "GBP"),
+      block("Harbour Room", 2, 135_000, 168_750, "GBP"),
+      block("Coffee break", 90, 700, 784, "GBP"),
+      block("Conference lunch", 90, 1_800, 2_016, "GBP"),
+      block("Projector and screen", 2, 8_900, 11_125, "GBP"),
     ]);
     expect(input.data).toMatchObject({ currency: "GBP", subtotal: 2 * 135_000 + 90 * 700 + 90 * 1_800 + 2 * 8_900 });
   });
@@ -123,7 +134,13 @@ describe("splitName", () => {
   });
 });
 
-function block(title: string, quantity: number, unitPrice: number, currency: Currency = "SEK") {
+function block(
+  title: string,
+  quantity: number,
+  unitPrice: number,
+  unitPriceWithTax: number,
+  currency: Currency = "SEK",
+) {
   return {
     type: "product-block",
     content_id: idOf(title),
@@ -131,5 +148,8 @@ function block(title: string, quantity: number, unitPrice: number, currency: Cur
     currency,
     quantity,
     unit_value_without_discount_without_tax: unitPrice,
+    unit_value_with_discount_without_tax: unitPrice,
+    unit_value_without_discount_with_tax: unitPriceWithTax,
+    unit_value_with_discount_with_tax: unitPriceWithTax,
   };
 }

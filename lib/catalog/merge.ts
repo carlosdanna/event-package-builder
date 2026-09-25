@@ -64,6 +64,7 @@ function toCatalogItem(
     category: entry.category,
     unit: entry.unit,
     prices: entry.prices,
+    vatPercent: entry.vatPercent,
   };
   return catalogItemSchema.parse({
     ...item,

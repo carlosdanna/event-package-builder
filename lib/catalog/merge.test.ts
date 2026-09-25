@@ -6,6 +6,7 @@ const boardroom: CatalogMetadata = {
   category: "meeting_space",
   unit: "per_day",
   prices: { SEK: 600_000, EUR: 52_000, USD: 57_000, GBP: 45_000 },
+  vatPercent: 25,
   capacity: 12,
   description: "Private boardroom.",
 };
@@ -14,6 +15,7 @@ const coffee: CatalogMetadata = {
   category: "catering",
   unit: "per_person_per_day",
   prices: { SEK: 9_500, EUR: 850, USD: 900, GBP: 700 },
+  vatPercent: 12,
   description: "Coffee and a bun.",
 };
 
@@ -32,6 +34,7 @@ describe("mergeCatalog", () => {
         category: "meeting_space",
         unit: "per_day",
         prices: { SEK: 600_000, EUR: 52_000, USD: 57_000, GBP: 45_000 },
+        vatPercent: 25,
         capacity: 12,
       },
     ]);

@@ -26,6 +26,9 @@ const pricingFields = {
   unit: pricingUnitSchema,
   // One price per currency, excluding tax. Every supported currency must be listed.
   prices: z.record(currencySchema, z.number().int().nonnegative()),
+  // VAT in whole percent, added on top of the prices. It follows the hotel's
+  // country, so one rate covers every currency.
+  vatPercent: z.number().int().min(0).max(100),
   capacity: z.number().int().positive().optional(), // meeting spaces only
   // How many the hotel has, such as 40 rooms or 1 hall. Missing means there is
   // no physical limit, as for catering.

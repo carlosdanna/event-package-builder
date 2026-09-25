@@ -8,3 +8,4 @@ export * from "./capacity";
 export * from "./limits";
 export * from "./assemble";
 export * from "./estimate";
+export * from "./tax";

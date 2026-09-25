@@ -95,6 +95,9 @@ const productBlockSchema = z.object({
   currency: z.string().optional(),
   quantity: z.number().nonnegative(),
   unit_value_without_discount_without_tax: z.number().int().nonnegative(),
+  unit_value_with_discount_without_tax: z.number().int().nonnegative().optional(),
+  unit_value_without_discount_with_tax: z.number().int().nonnegative().optional(),
+  unit_value_with_discount_with_tax: z.number().int().nonnegative().optional(),
 });
 
 export const createProposalInputSchema = z.object({
