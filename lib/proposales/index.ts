@@ -5,7 +5,6 @@ import { proposalesFetch } from "./client";
 import { ProposalesError } from "./errors";
 import {
   companySchema,
-  companyTemplateSchema,
   contentArchivedSchema,
   contentCreatedSchema,
   contentItemSchema,
@@ -28,14 +27,6 @@ export async function listCompanies() {
   const response = await proposalesFetch("/v3/companies", {
     schema: listOf(companySchema),
   });
-  return response.data;
-}
-
-export async function listCompanyTemplates(companyId: number) {
-  const response = await proposalesFetch(
-    `/v3/companies/${companyId}/templates`,
-    { schema: listOf(companyTemplateSchema) },
-  );
   return response.data;
 }
 

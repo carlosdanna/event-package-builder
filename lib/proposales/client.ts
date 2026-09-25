@@ -5,7 +5,7 @@ import type { z } from "zod";
 import { ProposalesError } from "./errors";
 import { errorBodySchema } from "./schemas";
 
-export const PROPOSALES_BASE_URL = "https://api.proposales.com";
+const PROPOSALES_BASE_URL = "https://api.proposales.com";
 export const TIMEOUT_MS = 10_000;
 
 type QueryValue = string | number | boolean | undefined;
@@ -49,7 +49,7 @@ function readApiKey(): string {
   return key;
 }
 
-export function buildUrl(path: string, query: Record<string, QueryValue> = {}) {
+function buildUrl(path: string, query: Record<string, QueryValue> = {}) {
   const url = new URL(path, PROPOSALES_BASE_URL);
   for (const [name, value] of Object.entries(query)) {
     if (value !== undefined) url.searchParams.set(name, String(value));

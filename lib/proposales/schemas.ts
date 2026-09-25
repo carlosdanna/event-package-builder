@@ -29,13 +29,6 @@ export const companySchema = z.looseObject({
 });
 export type Company = z.infer<typeof companySchema>;
 
-export const companyTemplateSchema = z.looseObject({
-  uuid: z.string(),
-  title: z.string().nullish(),
-  language: z.string(),
-});
-export type CompanyTemplate = z.infer<typeof companyTemplateSchema>;
-
 export const contentItemSchema = z.looseObject({
   product_id: z.number().int(),
   variation_id: z.number().int(),
