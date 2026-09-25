@@ -65,9 +65,11 @@ function toCatalogItem(
     unit: entry.unit,
     priceOre: entry.priceOre,
   };
-  return catalogItemSchema.parse(
-    entry.capacity === undefined ? item : { ...item, capacity: entry.capacity },
-  );
+  return catalogItemSchema.parse({
+    ...item,
+    ...(entry.capacity !== undefined && { capacity: entry.capacity }),
+    ...(entry.available !== undefined && { available: entry.available }),
+  });
 }
 
 const categoryOrder = catalogCategorySchema.options;

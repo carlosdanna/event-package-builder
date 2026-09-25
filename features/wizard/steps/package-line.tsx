@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcwIcon, TrashIcon, TriangleAlertIcon } from "lucide-react";
+import { InfoIcon, RotateCcwIcon, TrashIcon, TriangleAlertIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { unitLabel } from "@/lib/catalog/labels";
+import { availableLabel, unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
-import type { LineItem } from "@/lib/package";
+import { shortfall, type CapacityIssue, type LineItem } from "@/lib/package";
 import { MAX_QUANTITY } from "@/lib/schemas/package-selection";
 import { isAllowedQuantity } from "../reducer";
 
 type PackageLineProps = {
   line: LineItem;
-  capacityReason?: string;
+  issue?: CapacityIssue;
   onQuantityChange: (quantity: number) => void;
   onReset: () => void;
   onRemove: () => void;
@@ -21,13 +21,15 @@ type PackageLineProps = {
 
 export function PackageLine({
   line,
-  capacityReason,
+  issue,
   onQuantityChange,
   onReset,
   onRemove,
 }: PackageLineProps) {
   const inputId = `quantity-${line.contentId}`;
   const isCustom = line.source === "overridden";
+  const available = availableLabel(line);
+  const missing = shortfall(line);
 
   return (
     <li className="flex flex-col gap-2 py-3">
@@ -40,6 +42,7 @@ export function PackageLine({
           </span>
           <span className="text-sm text-muted-foreground">
             {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
+            {available && ` · ${available}`}
           </span>
         </div>
 
@@ -47,6 +50,7 @@ export function PackageLine({
           id={inputId}
           label={`Quantity of ${line.title}`}
           quantity={line.quantity}
+          max={line.maxQuantity ?? MAX_QUANTITY}
           onChange={onQuantityChange}
         />
 
@@ -80,10 +84,21 @@ export function PackageLine({
         </div>
       </div>
 
-      {capacityReason && (
+      {issue && (
         <p className="flex items-center gap-1.5 text-sm text-destructive">
-          <TriangleAlertIcon aria-hidden className="size-4" />
-          Too small: {capacityReason}. Remove it and add a bigger space.
+          <TriangleAlertIcon aria-hidden className="size-4 shrink-0" />
+          {issue.reason}.{" "}
+          {line.category === "meeting_space" && line.capacity !== undefined
+            ? "Remove it and add a bigger space."
+            : "Lower the quantity."}
+        </p>
+      )}
+
+      {!issue && missing > 0 && (
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <InfoIcon aria-hidden className="size-4 shrink-0" />
+          {line.neededQuantity} needed, but the hotel has only {line.maxQuantity} for these dates.
+          The other {missing} must be arranged elsewhere.
         </p>
       )}
     </li>
@@ -94,13 +109,14 @@ type QuantityInputProps = {
   id: string;
   label: string;
   quantity: number;
+  max: number;
   onChange: (quantity: number) => void;
 };
 
 // Holds the typed text, so the field can be empty while typing, and only
-// sends whole numbers on. It follows the quantity when it changes elsewhere,
+// sends whole numbers up to the maximum on. It follows the quantity when it changes elsewhere,
 // such as after a reset or a new guest count.
-function QuantityInput({ id, label, quantity, onChange }: QuantityInputProps) {
+function QuantityInput({ id, label, quantity, max, onChange }: QuantityInputProps) {
   const [text, setText] = useState(String(quantity));
   const [shownQuantity, setShownQuantity] = useState(quantity);
 
@@ -116,14 +132,14 @@ function QuantityInput({ id, label, quantity, onChange }: QuantityInputProps) {
       type="number"
       inputMode="numeric"
       min={0}
-      max={MAX_QUANTITY}
+      max={max}
       step={1}
       className="w-20 text-right tabular-nums max-sm:h-11"
       value={text}
       onChange={(event) => {
         setText(event.target.value);
         const next = Number(event.target.value);
-        if (event.target.value !== "" && isAllowedQuantity(next)) {
+        if (event.target.value !== "" && isAllowedQuantity(next) && next <= max) {
           setShownQuantity(next);
           onChange(next);
         }

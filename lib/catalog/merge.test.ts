@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mergeCatalog, type CatalogContent } from "./merge";
-import type { CatalogMetadata } from "./schema";
+import { catalogMetadataSchema, type CatalogMetadata } from "./schema";
 
 const boardroom: CatalogMetadata = {
   category: "meeting_space",
@@ -38,6 +38,14 @@ describe("mergeCatalog", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it("keeps how many the hotel has", () => {
+    const [item] = mergeCatalog([content(1, { en: "Boardroom" })], {
+      Boardroom: { ...boardroom, available: 1 },
+    }).items;
+
+    expect(item.available).toBe(1);
+  });
+
   it("leaves out the description, which only the seed script uses", () => {
     const [item] = mergeCatalog([content(1, { en: "Coffee break" })], {
       "Coffee break": coffee,
@@ -45,6 +53,7 @@ describe("mergeCatalog", () => {
 
     expect(item).not.toHaveProperty("description");
     expect(item).not.toHaveProperty("capacity");
+    expect(item).not.toHaveProperty("available");
   });
 
   it("leaves out content without metadata and warns about it", () => {
@@ -119,5 +128,18 @@ describe("mergeCatalog", () => {
     expect(() =>
       mergeCatalog([content(1, { en: "Coffee break" })], { "Coffee break": invalid }),
     ).toThrow("Only meeting spaces can have a capacity.");
+  });
+});
+
+describe("catalogMetadataSchema", () => {
+  it("allows a limit on items priced per day, per room per night or as a flat fee", () => {
+    expect(catalogMetadataSchema.safeParse({ ...boardroom, available: 1 }).success).toBe(true);
+  });
+
+  it("refuses a limit on items priced per person", () => {
+    const result = catalogMetadataSchema.safeParse({ ...coffee, available: 100 });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["available"]);
   });
 });

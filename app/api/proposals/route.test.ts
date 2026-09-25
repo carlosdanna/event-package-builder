@@ -80,6 +80,24 @@ describe("POST /api/proposals", () => {
     expect(createProposalMock).not.toHaveBeenCalled();
   });
 
+  it("refuses more than the hotel has, without calling Proposales", async () => {
+    const response = await post({ ...request, overrides: { [idOf("Harbour Room")]: 3 } });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "Harbour Room: At most 2 for these dates, you have 3.",
+    });
+    expect(createProposalMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses a meeting space too small for the guests", async () => {
+    const response = await post({ ...request, basics: { ...request.basics, guests: 200 } });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Grand Hall: Seats 150, you need 200." });
+    expect(createProposalMock).not.toHaveBeenCalled();
+  });
+
   it("shows a fixed message instead of the Proposales text when creating fails", async () => {
     createProposalMock.mockRejectedValueOnce(
       new ProposalesError("http", "Invalid request for company 7", { status: 400 }),

@@ -30,6 +30,7 @@ export default defineConfig({
       // Never a real key: every call to Proposales is answered by the test.
       PROPOSALES_API_KEY: "test-key",
       PROPOSALES_COMPANY_ID: "7",
+      APP_PASSWORD: "test-password",
     },
   },
 });

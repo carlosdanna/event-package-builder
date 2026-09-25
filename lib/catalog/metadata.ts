@@ -1,4 +1,5 @@
-// What Proposales content cannot store: category, pricing unit, price and capacity.
+// What Proposales content cannot store: category, pricing unit, price, capacity
+// and how many the hotel has.
 // Keyed by the English content title in Proposales. Prices exclude tax.
 import { z } from "zod";
 import { catalogMetadataSchema, type CatalogMetadata } from "./schema";
@@ -14,6 +15,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       unit: "per_day",
       priceOre: kronor(6_000),
       capacity: 12,
+      available: 1,
       description:
         "Private boardroom for up to 12 people around one oak table, with daylight over the water, a wall-mounted screen and a whiteboard.",
     },
@@ -22,6 +24,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       unit: "per_day",
       priceOre: kronor(18_000),
       capacity: 50,
+      available: 1,
       description:
         "Bright meeting room for up to 50 people with harbour views, flexible seating in classroom, theatre or group tables, and a built-in sound system.",
     },
@@ -30,6 +33,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       unit: "per_day",
       priceOre: kronor(45_000),
       capacity: 150,
+      available: 1,
       description:
         "The hotel's largest room, for up to 150 people seated or 250 standing. Stage, dance floor and dimmable lighting for conferences, launches and weddings.",
     },
@@ -76,6 +80,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       category: "rooms",
       unit: "per_room_per_night",
       priceOre: kronor(1_890),
+      available: 40,
       description:
         "Comfortable double room of about 20 square metres with a courtyard view and breakfast buffet included.",
     },
@@ -83,6 +88,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       category: "rooms",
       unit: "per_room_per_night",
       priceOre: kronor(2_490),
+      available: 20,
       description:
         "Spacious double room of about 28 square metres with a view over the water, a seating area and breakfast included.",
     },
@@ -90,6 +96,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       category: "rooms",
       unit: "per_room_per_night",
       priceOre: kronor(4_900),
+      available: 4,
       description:
         "Corner suite with separate living room, bathtub and views over Stockholm's inner harbour. Breakfast included.",
     },
@@ -99,6 +106,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       category: "equipment",
       unit: "per_day",
       priceOre: kronor(1_200),
+      available: 3,
       description:
         "High-brightness projector with a large screen, cables for common laptop connections, and a wireless presenter.",
     },
@@ -106,6 +114,7 @@ export const catalogMetadata: Record<string, CatalogMetadata> = z
       category: "equipment",
       unit: "flat",
       priceOre: kronor(1_500),
+      available: 2,
       description:
         "Two wireless handheld microphones and one clip-on microphone, connected to the room's speakers, for the whole event.",
     },

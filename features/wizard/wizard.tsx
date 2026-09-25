@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CatalogItem } from "@/lib/catalog/schema";
-import { assemblePackage, capacityIssues, summarize } from "@/lib/package";
+import { assemblePackage, packageIssues, summarize } from "@/lib/package";
 import { customerDetailsDraftSchema } from "@/lib/schemas/customer";
 import { eventBasicsDraftSchema } from "@/lib/schemas/event-basics";
 import { getTemplate } from "@/lib/templates";
@@ -58,7 +58,8 @@ export function Wizard() {
   // Repeat clicks while a request is on its way are ignored. On failure every
   // entered value stays, and the toast offers to try again.
   function createDraft() {
-    if (creatingRef.current || !state.templateId || !priced) return;
+    // The server refuses these too; checking here saves a round trip from the toast's retry.
+    if (creatingRef.current || !state.templateId || !priced || priced.issues.length > 0) return;
     creatingRef.current = true;
     const request = {
       templateId: state.templateId,
@@ -176,7 +177,7 @@ function usePricedPackage(state: WizardState, catalog: CatalogItem[] | undefined
       budgetOre,
       lines,
       summary: summarize(lines, basics, budgetOre),
-      capacityIssues: capacityIssues(lines, basics.guests),
+      issues: packageIssues(lines, basics.guests),
     };
   }, [catalog, templateId, draft, addedContentIds, removedContentIds, overrides]);
 }
@@ -234,7 +235,7 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
           lines={priced.lines}
           catalog={catalog}
           guests={priced.basics.guests}
-          capacityIssues={priced.capacityIssues}
+          issues={priced.issues}
           onQuantityChange={(line, quantity) =>
             dispatch({
               type: "setQuantity",
@@ -268,7 +269,7 @@ function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: C
           budgetOre={priced.budgetOre}
           lines={priced.lines}
           summary={priced.summary}
-          capacityIssues={priced.capacityIssues}
+          issues={priced.issues}
           customer={customer.data}
           pending={creating}
           onEdit={(step) => dispatch({ type: "goToStep", step })}

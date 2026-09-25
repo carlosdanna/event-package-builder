@@ -13,7 +13,7 @@ type PackageStepProps = {
   lines: LineItem[];
   catalog: CatalogItem[];
   guests: number;
-  capacityIssues: CapacityIssue[];
+  issues: CapacityIssue[];
   onQuantityChange: (line: LineItem, quantity: number) => void;
   onReset: (contentId: number) => void;
   onRemove: (contentId: number) => void;
@@ -24,7 +24,7 @@ export function PackageStep({
   lines,
   catalog,
   guests,
-  capacityIssues,
+  issues,
   onQuantityChange,
   onReset,
   onRemove,
@@ -55,9 +55,7 @@ export function PackageStep({
                 <PackageLine
                   key={line.contentId}
                   line={line}
-                  capacityReason={
-                    capacityIssues.find((issue) => issue.contentId === line.contentId)?.reason
-                  }
+                  issue={issues.find((issue) => issue.contentId === line.contentId)}
                   onQuantityChange={(quantity) => onQuantityChange(line, quantity)}
                   onReset={() => onReset(line.contentId)}
                   onRemove={() => onRemove(line.contentId)}

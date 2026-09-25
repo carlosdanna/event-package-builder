@@ -29,4 +29,26 @@ describe("catalogMetadata", () => {
       expect(entry.capacity !== undefined).toBe(entry.category === "meeting_space");
     }
   });
+
+  it("limits spaces, rooms and equipment, and never catering", () => {
+    const limits = Object.fromEntries(
+      Object.entries(catalogMetadata).map(([title, entry]) => [title, entry.available ?? null]),
+    );
+
+    expect(limits).toEqual({
+      Boardroom: 1,
+      "Harbour Room": 1,
+      "Grand Hall": 1,
+      "Coffee break": null,
+      "Conference lunch": null,
+      "Three-course dinner": null,
+      "Wedding dinner package": null,
+      "Vegetarian menu": null,
+      "Standard double": 40,
+      "Superior double": 20,
+      Suite: 4,
+      "Projector and screen": 3,
+      "Microphone set": 2,
+    });
+  });
 });

@@ -22,7 +22,7 @@ export class RequestError extends Error {
 }
 
 type FetchJsonOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "DELETE";
   body?: unknown;
   signal?: AbortSignal; // from TanStack Query, so leaving the page cancels the request
   timeoutMs: number;

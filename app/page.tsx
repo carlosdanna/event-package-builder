@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SignOutButton } from "@/features/auth/sign-out-button";
 import { Wizard } from "@/features/wizard/wizard";
 
 export default function Home() {
@@ -12,7 +13,10 @@ export default function Home() {
             Proposales.
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex gap-1">
+          <ThemeToggle />
+          <SignOutButton />
+        </div>
       </header>
 
       <Wizard />

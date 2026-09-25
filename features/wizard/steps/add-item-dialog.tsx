@@ -10,7 +10,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { catalogCategorySchema, type CatalogItem } from "@/lib/catalog/schema";
-import { categoryLabel, unitLabel } from "@/lib/catalog/labels";
+import { availableLabel, categoryLabel, unitLabel } from "@/lib/catalog/labels";
 import { formatKronor } from "@/lib/format";
 import { meetingSpaceIssue } from "@/lib/package";
 
@@ -44,6 +44,7 @@ export function AddItemDialog({ open, onOpenChange, items, guests, onAdd }: AddI
               <CommandGroup key={category} heading={categoryLabel(category)}>
                 {inCategory.map((item) => {
                   const issue = meetingSpaceIssue(item, guests);
+                  const available = availableLabel(item);
                   return (
                     <CommandItem
                       key={item.contentId}
@@ -58,7 +59,8 @@ export function AddItemDialog({ open, onOpenChange, items, guests, onAdd }: AddI
                       <span className="flex flex-1 flex-col">
                         <span>{item.title}</span>
                         <span className="text-xs text-muted-foreground">
-                          {issue ?? `${formatKronor(item.priceOre)} ${unitLabel(item.unit)}`}
+                          {issue ??
+                            `${formatKronor(item.priceOre)} ${unitLabel(item.unit)}${available ? ` · ${available}` : ""}`}
                         </span>
                       </span>
                     </CommandItem>

@@ -9,6 +9,8 @@ import { getTemplate } from "@/lib/templates";
 
 const COMPANY_ID = 7;
 const DRAFT_URL = "https://app.proposales.com/proposals/e2e-draft";
+// Matches APP_PASSWORD in playwright.config.ts.
+const E2E_PASSWORD = "test-password";
 
 // The seeded catalog as Proposales would list it, one content item per metadata entry.
 const contents = Object.entries(catalogMetadata).map(([title, entry], index) => ({
@@ -57,7 +59,7 @@ test("creates a conference draft with one changed quantity", async ({ page, next
   const expectedTotal = formatKronor(summarize(lines, basics).subtotalOre);
   const expectedTitle = `Full-day conference for Acme AB, ${formatDateRange(startDate, endDate)}`;
 
-  await page.goto("/");
+  await signIn(page);
 
   // Template
   await page.getByRole("radio", { name: /Full-day conference/ }).check();
@@ -137,6 +139,13 @@ test("creates a conference draft with one changed quantity", async ({ page, next
   expect(sent.blocks.every((block) => block.quantity > 0)).toBe(true);
   expect(sent.data).toMatchObject({ guests: 45, subtotal_ore: summarize(lines, basics).subtotalOre });
 });
+
+async function signIn(page: Page) {
+  await page.goto("/");
+  await page.getByLabel("Password").fill(E2E_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "Pick a template" })).toBeVisible();
+}
 
 async function goNext(page: Page) {
   await page.getByRole("button", { name: "Next", exact: true }).click();

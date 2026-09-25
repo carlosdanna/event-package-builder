@@ -2,7 +2,7 @@
 // The package is rebuilt here from the salesperson's choices: prices and totals
 // never come from the browser.
 import { getCatalog } from "@/lib/catalog/get-catalog";
-import { assemblePackage, summarize } from "@/lib/package";
+import { assemblePackage, packageIssues, summarize } from "@/lib/package";
 import { createProposal, resolveCompanyId, searchProposals } from "@/lib/proposales";
 import { PROPOSAL_SOURCE, buildCreateProposalInput, proposalTitle } from "@/lib/proposales/mapping";
 import {
@@ -38,6 +38,11 @@ export async function POST(request: Request) {
     const summary = summarize(lines, basics);
     if (!lines.some((line) => line.quantity > 0)) {
       return Response.json({ error: "The package is empty." }, { status: 400 });
+    }
+    // A space too small for the guests, or more than the hotel has, cannot be booked.
+    const [issue] = packageIssues(lines, basics.guests);
+    if (issue) {
+      return Response.json({ error: `${issue.title}: ${issue.reason}.` }, { status: 400 });
     }
 
     const input = buildCreateProposalInput({ companyId, template, basics, lines, summary, customer });
