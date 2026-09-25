@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef } from "react";
+import { toast } from "sonner";
 import { ArrowLeftIcon, ArrowRightIcon, CircleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CatalogItem } from "@/lib/catalog/schema";
 import { assemblePackage, capacityIssues, summarize } from "@/lib/package";
+import { customerDetailsDraftSchema } from "@/lib/schemas/customer";
 import { eventBasicsDraftSchema } from "@/lib/schemas/event-basics";
 import { getTemplate } from "@/lib/templates";
-import { BasicsStep, PackageStep, PlaceholderStep, TemplateStep } from "../steps";
+import { DoneScreen } from "../done-screen";
+import { RecentDrafts } from "../recent-drafts";
+import { BasicsStep, CustomerStep, PackageStep, ReviewStep, TemplateStep } from "../steps";
 import { MobileSummaryBar, Summary, SummarySkeleton, type SummaryProps } from "../summary";
 import { useCatalog } from "../use-catalog";
+import { useCreateProposal } from "../use-create-proposal";
 import { ProgressSteps } from "./progress-steps";
 import {
   LAST_STEP,
@@ -29,6 +34,44 @@ export function Wizard() {
   const catalog = catalogQuery.data;
   const priced = usePricedPackage(state, catalog);
   const headingRef = useStepFocus(state.step);
+  const createMutation = useCreateProposal();
+  // Set before the first render after a click, so a fast second click or the
+  // toast's retry cannot send the same draft twice.
+  const creatingRef = useRef(false);
+
+  // Repeat clicks while a request is on its way are ignored. On failure every
+  // entered value stays, and the toast offers to try again.
+  function createDraft() {
+    if (creatingRef.current || !state.templateId || !priced) return;
+    creatingRef.current = true;
+    const request = {
+      templateId: state.templateId,
+      basics: priced.basics,
+      addedContentIds: state.addedContentIds,
+      removedContentIds: state.removedContentIds,
+      overrides: state.overrides,
+      customer: state.customer,
+    };
+    createMutation.mutate(request, {
+      onSettled: () => {
+        creatingRef.current = false;
+      },
+      onError: (error) =>
+        toast.error("Could not create the draft proposal", {
+          description: error.message,
+          action: { label: "Try again", onClick: createDraft },
+        }),
+    });
+  }
+
+  function startOver() {
+    createMutation.reset();
+    dispatch({ type: "reset" });
+  }
+
+  if (createMutation.isSuccess) {
+    return <DoneScreen proposal={createMutation.data} onStartOver={startOver} />;
+  }
 
   const summaryProps: SummaryProps = {
     lines: priced?.lines ?? [],
@@ -65,7 +108,14 @@ export function Wizard() {
             />
           ) : (
             <>
-              <CurrentStep state={state} catalog={catalog!} priced={priced} dispatch={dispatch} />
+              <CurrentStep
+                state={state}
+                catalog={catalog!}
+                priced={priced}
+                dispatch={dispatch}
+                creating={createMutation.isPending}
+                onCreate={createDraft}
+              />
               <StepButtons state={state} dispatch={dispatch} />
             </>
           )}
@@ -134,17 +184,22 @@ type CurrentStepProps = {
   catalog: CatalogItem[];
   priced: PricedPackage | null;
   dispatch: React.Dispatch<WizardAction>;
+  creating: boolean;
+  onCreate: () => void;
 };
 
-function CurrentStep({ state, catalog, priced, dispatch }: CurrentStepProps) {
+function CurrentStep({ state, catalog, priced, dispatch, creating, onCreate }: CurrentStepProps) {
   switch (STEPS[state.step].id) {
     case "template":
       return (
-        <TemplateStep
-          catalog={catalog}
-          selected={state.templateId}
-          onSelect={(templateId) => dispatch({ type: "selectTemplate", templateId })}
-        />
+        <>
+          <TemplateStep
+            catalog={catalog}
+            selected={state.templateId}
+            onSelect={(templateId) => dispatch({ type: "selectTemplate", templateId })}
+          />
+          <RecentDrafts />
+        </>
       );
     case "basics":
       return (
@@ -177,9 +232,33 @@ function CurrentStep({ state, catalog, priced, dispatch }: CurrentStepProps) {
         />
       );
     case "customer":
-      return <PlaceholderStep message="Customer details are not available yet." />;
-    case "confirm":
-      return <PlaceholderStep message="Creating the draft proposal is not available yet." />;
+      return (
+        <CustomerStep
+          draft={state.customer}
+          showAllErrors={state.showCustomerErrors}
+          onChange={(field, value) => dispatch({ type: "setCustomerField", field, value })}
+        />
+      );
+    case "confirm": {
+      // The reducer only opens this step once every earlier step is complete.
+      const customer = customerDetailsDraftSchema.safeParse(state.customer);
+      const template = state.templateId ? getTemplate(state.templateId) : undefined;
+      if (!priced || !customer.success || !template) return null;
+      return (
+        <ReviewStep
+          template={template}
+          basics={priced.basics}
+          budgetOre={priced.budgetOre}
+          lines={priced.lines}
+          summary={priced.summary}
+          capacityIssues={priced.capacityIssues}
+          customer={customer.data}
+          pending={creating}
+          onEdit={(step) => dispatch({ type: "goToStep", step })}
+          onCreate={onCreate}
+        />
+      );
+    }
   }
 }
 

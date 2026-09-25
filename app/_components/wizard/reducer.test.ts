@@ -129,3 +129,44 @@ describe("wizardReducer package choices", () => {
     expect(state.addedContentIds).toEqual([9]);
   });
 });
+
+describe("wizardReducer customer details", () => {
+  const toCustomerStep: WizardAction[] = [...toPackageStep, { type: "next" }];
+  const validCustomer: WizardAction[] = [
+    { type: "setCustomerField", field: "company", value: "Acme AB" },
+    { type: "setCustomerField", field: "contactName", value: "Anna Berg" },
+    { type: "setCustomerField", field: "contactEmail", value: "anna@acme.example" },
+  ];
+
+  it("shows the customer errors instead of moving on when details are missing", () => {
+    const state = run(...toCustomerStep, { type: "next" });
+    expect(state.step).toBe(3);
+    expect(state.showCustomerErrors).toBe(true);
+  });
+
+  it("moves to the confirm step with valid details and keeps them when going back", () => {
+    const state = run(...toCustomerStep, ...validCustomer, { type: "next" });
+    expect(state.step).toBe(4);
+    const back = wizardReducer(wizardReducer(state, { type: "goToStep", step: 1 }), {
+      type: "goToStep",
+      step: 4,
+    });
+    expect(back.step).toBe(4);
+    expect(back.customer.company).toBe("Acme AB");
+  });
+
+  it("blocks the confirm step when the customer details become invalid", () => {
+    const state = run(...toCustomerStep, ...validCustomer, { type: "next" }, { type: "back" });
+    const cleared = wizardReducer(state, {
+      type: "setCustomerField",
+      field: "contactEmail",
+      value: "",
+    });
+    expect(canReach(cleared, 4)).toBe(false);
+  });
+
+  it("starts over on reset", () => {
+    const state = run(...toCustomerStep, ...validCustomer, { type: "reset" });
+    expect(state).toEqual(initialWizardState);
+  });
+});

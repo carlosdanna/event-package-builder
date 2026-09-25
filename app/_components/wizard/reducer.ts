@@ -1,6 +1,11 @@
 // Wizard state: the salesperson's choices, never the priced lines.
 // Lines are derived from these choices with assemblePackage, so they cannot go stale.
 import {
+  customerDetailsDraftSchema,
+  emptyCustomerDetailsDraft,
+  type CustomerDetailsDraft,
+} from "@/lib/schemas/customer";
+import {
   emptyEventBasicsDraft,
   eventBasicsDraftSchema,
   type EventBasicsDraft,
@@ -23,6 +28,8 @@ export type WizardState = {
   templateId: TemplateId | null;
   basics: EventBasicsDraft;
   showBasicsErrors: boolean;
+  customer: CustomerDetailsDraft;
+  showCustomerErrors: boolean;
   addedContentIds: number[];
   removedContentIds: number[];
   overrides: Record<number, number>; // content id to quantity
@@ -31,13 +38,15 @@ export type WizardState = {
 export type WizardAction =
   | { type: "selectTemplate"; templateId: TemplateId }
   | { type: "setBasicsField"; field: keyof EventBasicsDraft; value: string }
+  | { type: "setCustomerField"; field: keyof CustomerDetailsDraft; value: string }
   | { type: "setQuantity"; contentId: number; quantity: number; derivedQuantity: number }
   | { type: "resetQuantity"; contentId: number }
   | { type: "addItem"; contentId: number }
   | { type: "removeItem"; contentId: number }
   | { type: "next" }
   | { type: "back" }
-  | { type: "goToStep"; step: number };
+  | { type: "goToStep"; step: number }
+  | { type: "reset" };
 
 export const initialWizardState: WizardState = {
   step: 0,
@@ -45,6 +54,8 @@ export const initialWizardState: WizardState = {
   templateId: null,
   basics: emptyEventBasicsDraft,
   showBasicsErrors: false,
+  customer: emptyCustomerDetailsDraft,
+  showCustomerErrors: false,
   addedContentIds: [],
   removedContentIds: [],
   overrides: {},
@@ -56,6 +67,8 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return selectTemplate(state, action.templateId);
     case "setBasicsField":
       return { ...state, basics: { ...state.basics, [action.field]: action.value } };
+    case "setCustomerField":
+      return { ...state, customer: { ...state.customer, [action.field]: action.value } };
     case "setQuantity":
       return setQuantity(state, action.contentId, action.quantity, action.derivedQuantity);
     case "resetQuantity":
@@ -70,6 +83,8 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, step: Math.max(state.step - 1, 0) };
     case "goToStep":
       return canReach(state, action.step) ? { ...state, step: action.step } : state;
+    case "reset":
+      return initialWizardState;
   }
 }
 
@@ -77,6 +92,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 export function canLeaveStep(state: WizardState, step: number) {
   if (step === 0) return state.templateId !== null;
   if (step === 1) return eventBasicsDraftSchema.safeParse(state.basics).success;
+  if (step === 3) return customerDetailsDraftSchema.safeParse(state.customer).success;
   return true;
 }
 
@@ -137,7 +153,9 @@ function removeItem(state: WizardState, contentId: number): WizardState {
 function next(state: WizardState): WizardState {
   if (state.step === LAST_STEP) return state;
   if (!canLeaveStep(state, state.step)) {
-    return state.step === 1 ? { ...state, showBasicsErrors: true } : state;
+    if (state.step === 1) return { ...state, showBasicsErrors: true };
+    if (state.step === 3) return { ...state, showCustomerErrors: true };
+    return state;
   }
   const step = state.step + 1;
   return { ...state, step, furthestStep: Math.max(state.furthestStep, step) };

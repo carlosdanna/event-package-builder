@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { eventBasicsDraftSchema, eventBasicsSchema } from "./event-basics";
+import { customerDetailsDraftSchema, emptyCustomerDetailsDraft } from "./customer";
 import { packageSelectionSchema } from "./package-selection";
+import { createProposalRequestSchema } from "./proposal";
 
 const draft = { guests: "40", startDate: "2026-10-14", endDate: "2026-10-15", budgetKronor: "" };
 
@@ -90,5 +92,68 @@ describe("packageSelectionSchema", () => {
     expect(packageSelectionSchema.safeParse({ ...selection, templateId: "gala" }).success).toBe(
       false,
     );
+  });
+});
+
+describe("customerDetailsDraftSchema", () => {
+  const customer = {
+    company: " Acme AB ",
+    contactName: "Anna Berg",
+    contactEmail: "anna@acme.example",
+    notes: "",
+  };
+
+  it("trims the fields and leaves out empty notes", () => {
+    expect(customerDetailsDraftSchema.parse(customer)).toEqual({
+      company: "Acme AB",
+      contactName: "Anna Berg",
+      contactEmail: "anna@acme.example",
+    });
+  });
+
+  it("keeps notes that have text", () => {
+    expect(customerDetailsDraftSchema.parse({ ...customer, notes: " Late arrival " }).notes).toBe(
+      "Late arrival",
+    );
+  });
+
+  it("asks for each required field", () => {
+    const result = customerDetailsDraftSchema.safeParse(emptyCustomerDetailsDraft);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      "Enter the company name.",
+      "Enter the contact's name.",
+      "Enter the contact's email address.",
+    ]);
+  });
+
+  it("rejects an invalid email address and very long notes", () => {
+    expect(
+      firstMessage(customerDetailsDraftSchema.safeParse({ ...customer, contactEmail: "anna@" })),
+    ).toBe("Enter a valid email address.");
+    expect(
+      customerDetailsDraftSchema.safeParse({ ...customer, notes: "x".repeat(2001) }).success,
+    ).toBe(false);
+  });
+});
+
+describe("createProposalRequestSchema", () => {
+  const request = {
+    templateId: "conference",
+    basics: { guests: 45, startDate: "2026-10-14", endDate: "2026-10-15" },
+    addedContentIds: [],
+    removedContentIds: [],
+    overrides: {},
+    customer: { company: "Acme AB", contactName: "Anna", contactEmail: "anna@acme.example" },
+  };
+
+  it("accepts choices and customer details", () => {
+    expect(createProposalRequestSchema.safeParse(request).success).toBe(true);
+  });
+
+  it("refuses prices or totals sent from the browser", () => {
+    expect(createProposalRequestSchema.safeParse({ ...request, subtotalOre: 1 }).success).toBe(
+      false,
+    );
+    expect(createProposalRequestSchema.safeParse({ ...request, budgetOre: 1 }).success).toBe(false);
   });
 });

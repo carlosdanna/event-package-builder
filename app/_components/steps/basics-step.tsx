@@ -6,7 +6,6 @@ import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { eventLength } from "@/lib/package";
 import {
@@ -14,6 +13,7 @@ import {
   eventBasicsDraftSchema,
   type EventBasicsDraft,
 } from "@/lib/schemas/event-basics";
+import { Field } from "./field";
 
 type FieldName = keyof EventBasicsDraft;
 
@@ -108,37 +108,6 @@ export function BasicsStep({ draft, showAllErrors, onChange }: BasicsStepProps) 
           />
         )}
       </Field>
-    </div>
-  );
-}
-
-type FieldProps = {
-  id: string;
-  label: string;
-  hint?: string;
-  error?: string;
-  children: (describedBy: string | undefined) => React.ReactNode;
-};
-
-function Field({ id, label, hint, error, children }: FieldProps) {
-  const hintId = hint ? `${id}-hint` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
-  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children(describedBy)}
-      {hint && (
-        <p id={hintId} className="text-sm text-muted-foreground">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={errorId} className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
     </div>
   );
 }
