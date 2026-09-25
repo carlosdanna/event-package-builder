@@ -103,7 +103,8 @@ export function Wizard() {
         onSelect={(step) => dispatch({ type: "goToStep", step })}
       />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      {/* grid-cols-1 is minmax(0, 1fr): long, cut-off text cannot widen the page on phones. */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <section aria-labelledby="step-heading" className="flex flex-col gap-6">
           <h2
             id="step-heading"

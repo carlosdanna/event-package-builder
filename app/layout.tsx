@@ -32,7 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <QueryProvider>{children}</QueryProvider>
-          <Toaster />
+          {/* At the top, so toasts never cover the summary bar on phones. */}
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

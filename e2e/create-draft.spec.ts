@@ -87,7 +87,9 @@ test("creates a conference draft with one changed quantity", async ({ page, next
 
   // Confirm
   const coffeeRow = page.getByRole("row", { name: /Coffee break/ });
-  await expect(coffeeRow.getByRole("cell").nth(1)).toHaveText("45");
+  // 45 coffee breaks at 95 kronor, whichever way the table is laid out.
+  await expect(coffeeRow).toContainText(`45 × ${formatKronor(coffeeBreak.priceOre)}`);
+  await expect(coffeeRow).toContainText(formatKronor(45 * coffeeBreak.priceOre));
   await page.getByRole("button", { name: "Create draft proposal" }).click();
 
   // Done

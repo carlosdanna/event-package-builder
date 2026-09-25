@@ -22,6 +22,7 @@ import {
 import type { CustomerDetails } from "@/lib/schemas/customer";
 import type { EventBasics } from "@/lib/schemas/event-basics";
 import type { Template } from "@/lib/templates";
+import { cn } from "@/lib/utils";
 
 type ConfirmStepProps = {
   template: Template;
@@ -128,7 +129,7 @@ function ReviewSection({ title, editLabel, onEdit, children }: ReviewSectionProp
 
 function Details({ rows }: { rows: [string, string][] }) {
   return (
-    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[8rem_1fr]">
+    <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]">
       {rows.map(([label, value]) => (
         <div key={label} className="contents">
           <dt className="text-muted-foreground">{label}</dt>
@@ -139,23 +140,29 @@ function Details({ rows }: { rows: [string, string][] }) {
   );
 }
 
+// On phones, quantity and unit price move under the item name, so the table fits.
 function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageSummary }) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Item</TableHead>
-          <TableHead className="text-right">Quantity</TableHead>
-          <TableHead className="text-right">Unit price</TableHead>
+          <TableHead className="text-right max-sm:hidden">Quantity</TableHead>
+          <TableHead className="text-right max-sm:hidden">Unit price</TableHead>
           <TableHead className="text-right">Total</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {lines.map((line) => (
           <TableRow key={line.contentId}>
-            <TableCell className="whitespace-normal">{line.title}</TableCell>
-            <TableCell className="text-right tabular-nums">{line.quantity}</TableCell>
-            <TableCell className="text-right whitespace-normal tabular-nums">
+            <TableCell className="whitespace-normal">
+              {line.title}
+              <span className="block text-xs text-muted-foreground tabular-nums sm:hidden">
+                {line.quantity} × {formatKronor(line.unitPriceOre)} {unitLabel(line.unit)}
+              </span>
+            </TableCell>
+            <TableCell className="text-right tabular-nums max-sm:hidden">{line.quantity}</TableCell>
+            <TableCell className="text-right whitespace-normal tabular-nums max-sm:hidden">
               {formatKronor(line.unitPriceOre)}
               <span className="block text-xs text-muted-foreground">{unitLabel(line.unit)}</span>
             </TableCell>
@@ -167,16 +174,14 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
       </TableBody>
       <TableFooter>
         <TableRow>
-          <TableCell colSpan={3}>Subtotal, excluding tax</TableCell>
+          <FooterLabel>Subtotal, excluding tax</FooterLabel>
           <TableCell className="text-right font-semibold tabular-nums">
             {formatKronor(summary.subtotalOre)}
           </TableCell>
         </TableRow>
         {summary.perPersonOre !== null && (
           <TableRow>
-            <TableCell colSpan={3} className="font-normal text-muted-foreground">
-              Per person
-            </TableCell>
+            <FooterLabel className="font-normal text-muted-foreground">Per person</FooterLabel>
             <TableCell className="text-right font-normal text-muted-foreground tabular-nums">
               {formatKronor(summary.perPersonOre)}
             </TableCell>
@@ -184,5 +189,17 @@ function PackageTable({ lines, summary }: { lines: LineItem[]; summary: PackageS
         )}
       </TableFooter>
     </Table>
+  );
+}
+
+// Spans the item, quantity and unit price columns, or just the item column on phones.
+function FooterLabel({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <>
+      <TableCell colSpan={3} className={cn(className, "max-sm:hidden")}>
+        {children}
+      </TableCell>
+      <TableCell className={cn(className, "sm:hidden")}>{children}</TableCell>
+    </>
   );
 }

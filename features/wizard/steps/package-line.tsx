@@ -31,7 +31,8 @@ export function PackageLine({
 
   return (
     <li className="flex flex-col gap-2 py-3">
-      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[1fr_auto_7rem_auto]">
+      {/* A fixed actions column, wide enough for reset and remove, keeps every row aligned. */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_7rem_4.25rem]">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{line.title}</span>

@@ -35,7 +35,7 @@ export function TemplateStep({ catalog, selected, onSelect }: TemplateStepProps)
       aria-label="Event template"
       value={selected ?? ""}
       onValueChange={(value) => onSelect(value as TemplateId)}
-      className="grid gap-3 sm:grid-cols-2"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
     >
       {templates.map((template) => (
         <TemplateCard key={template.id} template={template} catalog={catalog} />
