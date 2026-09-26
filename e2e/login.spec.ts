@@ -25,3 +25,21 @@ test("refuses calls to the route handlers without a session", async ({ request }
   expect(response.status()).toBe(401);
   expect(await response.json()).toEqual({ error: "Sign in to continue." });
 });
+
+test("tells the user when the session expires", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/login");
+  await page.getByLabel("Password").fill("test-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "Pick a template" })).toBeVisible();
+
+  await page.clock.fastForward("10:00");
+
+  const dialog = page.getByRole("dialog", { name: "Your session expired" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Sign in again" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+});

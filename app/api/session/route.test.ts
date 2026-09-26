@@ -4,9 +4,12 @@ import { DELETE, POST } from "./route";
 
 beforeEach(() => {
   vi.stubEnv("APP_PASSWORD", "right password");
+  // The cookie holds its expiry time, so the clock is fixed to compare it.
+  vi.useFakeTimers({ now: Date.UTC(2026, 8, 25, 9, 0) });
 });
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 function post(body: unknown) {
