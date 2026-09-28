@@ -4,8 +4,6 @@
 
 A hotel salesperson picks the currency and an event template, enters the guest count and dates, and adjusts a suggested package while a live total updates beside it. After adding the customer's details and confirming, one click creates a draft proposal in Proposales with every line priced.
 
-![Screenshot of the wizard](docs/screenshot.png)
-
 ## Running locally
 
 You need the Node.js version in `.nvmrc` and pnpm (the version is pinned in `package.json`).
